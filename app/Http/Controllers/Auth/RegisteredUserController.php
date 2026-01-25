@@ -31,7 +31,7 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
@@ -39,12 +39,23 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+
+            // ✅ penting: set default role untuk user baru
+            // sesuaikan nama kolomnya: 'role' / 'level' / 'type'
+            'role' => 'user',
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // ✅ Redirect berdasarkan role (sama seperti login)
+        if ($user->isAdmin()) {
+            return redirect()->route('admin.setoran.index');
+        } elseif ($user->isPetugas()) {
+            return redirect()->route('petugas.setoran.index');
+        }
+
+        return redirect()->route('user.dashboard');
     }
 }
