@@ -2,909 +2,743 @@
 @section('title', 'Buat Setoran')
 
 @push('styles')
-{{-- Font (seragam, modern) --}}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
-{{-- Font Awesome --}}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --brand-soft: #ecfdf5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --radius: 20px;
+            --radius-sm: 12px;
+        }
 
-{{-- Leaflet --}}
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+        body,
+        .page,
+        .card,
+        input,
+        select,
+        textarea,
+        button,
+        a {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: var(--bg);
+        }
 
-<style>
-  :root{
-    --brand:#10b981;
-    --brand-dark:#059669;
-    --brand-soft:#ecfdf5;
+        .container-fluid {
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
 
-    --bg:#f9fafb;
-    --card:#ffffff;
-    --ink:#111827;
-    --muted:#6b7280;
-    --line:#e5e7eb;
+        @media (min-width:768px) {
+            .container-fluid {
+                padding: 0 24px;
+            }
+        }
 
-    --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --shadow:    0 12px 34px rgba(0,0,0,.10);
+        /* ===== MODERN HERO HEADER ===== */
+        .page-header {
+            /* Gradient yang lebih dalam & rich */
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
 
-    --radius:16px;
-    --radius-sm:12px;
-  }
+            /* Tambahkan tekstur dot halus agar tidak flat */
+            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(135deg, #10b981 0%, #047857 100%);
+            background-size: 24px 24px, 100% 100%;
 
-  body, .page, .card, input, select, textarea, button, a{
-    font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  }
+            /* Padding diperbesar: Atas 40px, Bawah 90px (untuk ruang overlap) */
+            padding: 40px 0 90px;
 
-  .container-fluid{
-    width:100%;
-    max-width:100%;
-    margin:0 auto;
-    padding-left:16px;
-    padding-right:16px;
-  }
-  @media (min-width:768px){
-    .container-fluid{ padding-left:24px; padding-right:24px; }
-  }
+            color: #fff;
+            position: relative;
 
-  /* ===== HEADER ===== */
-  .page-header{
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-    padding: 18px 0 16px;
-    color:#fff;
-    margin-bottom: 14px;
-    position:relative;
-    overflow:hidden;
-  }
-  .page-header::before{
-    content:"";
-    position:absolute;
-    inset:-90px -140px auto auto;
-    width:340px;height:340px;
-    background:rgba(255,255,255,.14);
-    border-radius:999px;
-    transform: rotate(18deg);
-  }
-  .page-header::after{
-    content:"";
-    position:absolute;
-    inset:auto auto -140px -140px;
-    width:300px;height:300px;
-    background:rgba(0,0,0,.08);
-    border-radius:999px;
-  }
-  .header-inner{
-    position:relative;
-    border-radius: var(--radius);
-    padding: 18px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 12px 30px rgba(0,0,0,.10);
-    backdrop-filter: blur(10px);
-  }
-  @media (min-width:768px){
-    .header-inner{ padding:22px; }
-  }
-  .title{
-    margin:0;
-    font-size: 1.45rem;
-    font-weight: 900;
-    letter-spacing:.2px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .subtitle{
-    margin:6px 0 0;
-    font-size:.95rem;
-    opacity:.95;
-    max-width: 760px;
-  }
+            /* Lengkungan lebih ekstrem dan smooth */
+            border-radius: 0 0 50px 50px;
 
-  /* ===== CARD ===== */
-  .page{ width:100%; padding-bottom: 92px; } /* ruang untuk sticky action bar bawah */
-  .card{
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    overflow:hidden;
-  }
-  .card-head{
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--line);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    background:#fff;
-  }
+            /* Shadow lembut untuk depth */
+            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
 
-  .muted{ color: var(--muted); font-size:.875rem; font-weight:700; }
+            /* Overlap: Kartu di bawahnya akan naik 60px menutupi header ini */
+            margin-bottom: -60px;
+            z-index: 1;
+            overflow: hidden;
+        }
 
-  .actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
+        /* Dekorasi Circle (Glassmorphism) - Diperbesar & Dipertajam */
+        .page-header::before {
+            content: "";
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -50px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-  .btnx{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    padding:10px 14px;
-    border-radius: 12px;
-    border:1px solid var(--line);
-    background:#fff;
-    color: var(--ink);
-    text-decoration:none;
-    cursor:pointer;
-    font-size:.875rem;
-    font-weight:800;
-    box-shadow: var(--shadow-sm);
-    transition:.2s;
-    line-height:1;
-    white-space:nowrap;
-  }
-  .btnx i{ font-size:.95rem; }
-  .btnx:hover{
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-    border-color: rgba(16,185,129,.45);
-  }
-  .btnx-primary{
-    background: var(--brand);
-    border-color: var(--brand);
-    color:#fff;
-  }
-  .btnx-primary:hover{
-    background: var(--brand-dark);
-    border-color: var(--brand-dark);
-  }
-  .btnx-soft{
-    background: var(--brand-soft);
-    border-color: rgba(16,185,129,.22);
-    color: #065f46;
-  }
-  .btnx-danger{
-    background:#fff;
-    border-color: rgba(239,68,68,.35);
-    color:#b91c1c;
-  }
-  .btnx-danger:hover{ border-color: rgba(239,68,68,.55); }
+        .page-header::after {
+            content: "";
+            position: absolute;
+            width: 250px;
+            height: 250px;
+            bottom: -50px;
+            right: -20px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
 
-  .alertx{
-    margin: 12px 0 0;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(239,68,68,.25);
-    background: #fef2f2;
-    color: #991b1b;
-    font-weight: 800;
-  }
-  .alertx ul{ margin:6px 0 0; padding-left:18px; }
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
 
-  .content{ padding: 16px; }
+        .title {
+            margin: 0;
+            font-size: 1.75rem;
+            /* Font lebih besar sedikit */
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-  /* ===== FORM ===== */
-  label{
-    font-weight: 900;
-    color: var(--ink);
-    display:block;
-    margin-bottom: 6px;
-    font-size: .9rem;
-  }
-  input, select, textarea{
-    width: 100%;
-    padding: 10px 12px;
-    border-radius: 12px;
-    border:1px solid var(--line);
-    background:#fff;
-    outline:none;
-    color: var(--ink);
-    font-weight:700;
-  }
-  input:focus, select:focus, textarea:focus{
-    border-color: rgba(16,185,129,.45);
-    box-shadow: 0 0 0 3px rgba(16,185,129,.12);
-  }
-  textarea{ resize: vertical; }
+        .subtitle {
+            margin-top: 10px;
+            font-size: 1rem;
+            opacity: 0.95;
+            line-height: 1.6;
+            font-weight: 500;
+            color: #ecfdf5;
+            /* Warna putih kehijauan agar soft */
+        }
 
-  .row{ margin-bottom: 12px; }
-  .grid2{
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-  }
-  @media (max-width: 680px){ .grid2{ grid-template-columns: 1fr; } }
+        /* ===== CARD & LAYOUT ===== */
+        .page {
+            padding-bottom: 100px;
+        }
 
-  .hint{
-    margin-top:6px;
-    color: var(--muted);
-    font-size: .85rem;
-    font-weight:700;
-  }
-  hr{
-    border:none;
-    border-top: 1px solid var(--line);
-    margin: 16px 0;
-  }
+        /* Space untuk fixed footer */
 
-  /* ===== MAP ===== */
-  #map{
-    height: 340px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    overflow:hidden;
-    box-shadow: 0 10px 24px rgba(0,0,0,.06);
-  }
-  .map-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-bottom: 10px;
-  }
-  .map-actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
+        .main-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            z-index: 10;
+            overflow: hidden;
+            margin-top: 10px;
+        }
 
-  /* ===== KPI ===== */
-  .pill{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:10px 12px;
-    border-radius: 14px;
-    border:1px solid rgba(16,185,129,.18);
-    background: var(--brand-soft);
-    font-weight:900;
-    color:#065f46;
-  }
-  .pill .label{
-    font-weight: 1000;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    white-space: nowrap;
-  }
-  .pill input{
-    width: 100%;
-    border: 1px solid var(--line);
-    background: #fff;
-    border-radius: 12px;
-    padding: 8px 10px;
-    font-weight: 900;
-    color: var(--ink);
-  }
-  .status-good{ color:#065f46; font-weight:900; }
-  .status-bad{ color:#b91c1c; font-weight:900; }
+        .card-head {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
 
-  /* ===== ITEMS SECTION (UX IMPROVED) ===== */
-  .items-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-bottom: 10px;
-  }
-  .items-title{
-    margin:0;
-    font-size: 1.05rem;
-    font-weight: 900;
-    color: var(--ink);
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
+        .content {
+            padding: 20px;
+        }
 
-  /* CTA utama: Tambah Jenis */
-  .btn-add{
-    position: relative;
-    padding: 12px 16px;
-    border-radius: 14px;
-    border: 1px solid rgba(16,185,129,.55) !important;
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%) !important;
-    color: #fff !important;
-    box-shadow:
-      0 14px 34px rgba(16,185,129,.28),
-      0 10px 22px rgba(0,0,0,.10) !important;
-  }
-  .btn-add:hover{
-    transform: translateY(-2px);
-    box-shadow:
-      0 20px 44px rgba(16,185,129,.32),
-      0 14px 26px rgba(0,0,0,.12) !important;
-  }
-  .btn-add::before{
-    content:"";
-    position:absolute;
-    inset:-7px;
-    border-radius: 18px;
-    background: radial-gradient(circle at 30% 30%, rgba(16,185,129,.35), transparent 55%);
-    filter: blur(2px);
-    opacity: .95;
-    z-index: -1;
-  }
-  .btn-add .badge{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    margin-left:8px;
-    padding:3px 8px;
-    border-radius:999px;
-    font-size:.72rem;
-    font-weight:900;
-    background: rgba(255,255,255,.18);
-    border: 1px solid rgba(255,255,255,.22);
-  }
+        /* ===== FORMS ===== */
+        label {
+            font-weight: 800;
+            color: var(--ink);
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
 
-  @keyframes pulseAddBtn{
-    0%   { box-shadow: 0 14px 34px rgba(16,185,129,.22), 0 0 0 0 rgba(16,185,129,.35); }
-    70%  { box-shadow: 0 14px 34px rgba(16,185,129,.30), 0 0 0 14px rgba(16,185,129,0); }
-    100% { box-shadow: 0 14px 34px rgba(16,185,129,.24), 0 0 0 0 rgba(16,185,129,0); }
-  }
-  .btn-add.is-pulse{ animation: pulseAddBtn 1.25s ease-out 0s 3; }
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--line);
+            font-weight: 600;
+            color: var(--ink);
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
 
-  /* sticky mini bar untuk CTA tambah jenis (selalu kelihatan pas scroll tabel) */
-  .add-sticky{
-    position: sticky;
-    top: 10px;
-    z-index: 20;
-    display:flex;
-    justify-content:flex-end;
-    margin: 0 0 10px;
-  }
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            outline: none;
+        }
 
-  /* ===== TABLE ===== */
-  .table-wrap{
-    overflow:auto;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background:#fff;
-  }
-  table{
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0;
-    min-width: 820px;
-  }
-  thead th{
-    text-align:left;
-    font-size:.75rem;
-    color: var(--muted);
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--line);
-    background: #f3f4f6;
-    letter-spacing:.06em;
-    text-transform: uppercase;
-    font-weight: 900;
-    white-space: nowrap;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-  }
-  tbody td{
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: top;
-    font-size: .875rem;
-    color: var(--ink);
-    font-weight: 700;
-  }
-  tbody tr:hover td{ background:#fafafa; }
-  .cell-center{ text-align:center; }
-  .nowrap{ white-space:nowrap; }
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
 
-  .total-box{
-    margin-top: 12px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:10px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(16,185,129,.18);
-    background: var(--brand-soft);
-    font-weight: 900;
-    color: #065f46;
-  }
-  .total-box .left{ display:flex; align-items:center; gap:10px; }
+        @media (max-width: 680px) {
+            .grid2 {
+                grid-template-columns: 1fr;
+            }
+        }
 
-  /* ===== STICKY ACTION BAR BAWAH (pojok kanan) ===== */
-  .actionbar{
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 10px 0;
-    background: rgba(249,250,251,.92);
-    border-top: 1px solid var(--line);
-    backdrop-filter: blur(10px);
-    z-index: 50;
-  }
-  .actionbar .inner{
-    display:flex;
-    justify-content:flex-end; /* pojok kanan */
-    align-items:center;
-    gap:10px;
-  }
-  .actionbar .btnx{
-    box-shadow: 0 10px 26px rgba(0,0,0,.10);
-  }
+        .row {
+            margin-bottom: 20px;
+        }
 
-  /* kecilin attribution leaflet */
-  .leaflet-control-attribution{ font-size: 11px; }
-</style>
+        .hint {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* ===== MAP UI ===== */
+        .map-wrapper {
+            border: 2px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: #fff;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .map-container {
+            position: relative;
+            height: 320px;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .map-overlay-tools {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+        }
+
+        .btn-tool {
+            background: var(--brand);
+            color: #fff;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            transition: 0.2s;
+        }
+
+        .btn-tool:hover {
+            transform: scale(1.05);
+            background: #047857;
+        }
+
+        .coordinate-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: var(--line);
+            border-top: 1px solid var(--line);
+        }
+
+        .coord-item {
+            background: #f8fafc;
+            padding: 10px;
+            font-size: 0.7rem;
+            color: var(--muted);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .coord-item span {
+            color: var(--ink);
+            font-family: monospace;
+            font-size: 0.8rem;
+        }
+
+        /* ===== TABLE & BUTTONS ===== */
+        .btnx {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s;
+            text-decoration: none;
+        }
+
+        .btnx:hover {
+            background: #f1f5f9;
+        }
+
+        .btnx-primary {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
+
+        .btnx-primary:hover {
+            background: var(--brand-dark);
+            transform: translateY(-1px);
+        }
+
+        .btnx-danger {
+            border-color: #fee2e2;
+            color: #ef4444;
+            background: #fef2f2;
+            padding: 8px 12px;
+        }
+
+        .add-sticky {
+            position: sticky;
+            top: 10px;
+            z-index: 20;
+            display: flex;
+            justify-content: flex-end;
+            margin: 0 0 10px;
+        }
+
+        .btn-add {
+            padding: 10px 16px;
+            border-radius: 50px;
+            border: none;
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .table-wrap {
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 820px;
+        }
+
+        thead th {
+            text-align: left;
+            font-size: 0.75rem;
+            color: var(--muted);
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+            background: #f8fafc;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .total-box {
+            margin-top: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-radius: var(--radius);
+            background: var(--brand-soft);
+            font-weight: 800;
+            color: #065f46;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* ===== LEGACY ACTION BAR (FIXED BOTTOM) ===== */
+        .actionbar {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 16px 0;
+            background: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid var(--line);
+            backdrop-filter: blur(8px);
+            z-index: 999;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .actionbar .inner {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 12px;
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="page">
-
-  {{-- HEADER --}}
-  <div class="page-header">
-    <div class="container-fluid">
-      <div class="header-inner">
-        <h2 class="title">
-          <i class="fa-solid fa-recycle"></i>
-          Buat Setoran Sampah
-        </h2>
-        <p class="subtitle">
-          Pilih metode setoran, lalu tambahkan beberapa jenis sampah sekaligus.
-          Jika <b>Jemput</b>, pilih titik di peta agar alamat terisi otomatis.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div class="container-fluid">
-    @if ($errors->any())
-      <div class="alertx">
-        <div style="display:flex; align-items:flex-start; gap:10px;">
-          <i class="fa-solid fa-triangle-exclamation" style="margin-top:2px;"></i>
-          <div>
-            <div><b>Periksa kembali:</b></div>
-            <ul>
-              @foreach ($errors->all() as $error)
-                <li>{{ $error }}</li>
-              @endforeach
-            </ul>
-          </div>
-        </div>
-      </div>
-    @endif
-
-    <form method="POST" action="{{ route('user.setoran.store') }}">
-      @csrf
-
-      <div class="card">
-        <div class="card-head">
-          <div class="muted">
-            <i class="fa-solid fa-circle-info"></i>
-            Lengkapi data setoran kamu di bawah ini.
-          </div>
-          <div class="actions">
-            <a class="btnx" href="{{ route('user.dashboard') }}">
-              <i class="fa-solid fa-house"></i> Dashboard
-            </a>
-            <a class="btnx btnx-soft" href="{{ route('user.setoran.index') }}">
-              <i class="fa-solid fa-clock-rotate-left"></i> Riwayat
-            </a>
-          </div>
-        </div>
-
-        <div class="content">
-          {{-- METODE --}}
-          <div class="row grid2">
-            <div>
-              <label><i class="fa-solid fa-truck-fast"></i> Metode *</label>
-              <select name="metode" id="metodeSelect" required>
-                <option value="antar" {{ old('metode','antar')=='antar'?'selected':'' }}>Antar sendiri</option>
-                <option value="jemput" {{ old('metode')=='jemput'?'selected':'' }}>Jemput</option>
-              </select>
-              <div class="hint">Jika <b>Jemput</b>: klik peta / geser marker. Koordinat & alamat akan terisi otomatis.</div>
-            </div>
-
-            <div>
-              <label><i class="fa-solid fa-calendar-day"></i> Jadwal Jemput (opsional)</label>
-              <input type="datetime-local" name="jadwal_jemput" value="{{ old('jadwal_jemput') }}">
-              <div class="hint">Boleh dikosongkan, nanti dijadwalkan oleh petugas.</div>
-            </div>
-          </div>
-
-          {{-- JEMPUT --}}
-          <div id="jemputFields" style="display:none;">
-            <hr>
-
-            <div class="row">
-              <label><i class="fa-solid fa-location-dot"></i> Alamat (untuk jemput) *</label>
-              <input type="text" name="alamat" id="alamatInput" value="{{ old('alamat') }}" placeholder="Alamat lengkap...">
-              <div class="hint">Alamat akan terisi otomatis dari lokasi. Kamu tetap bisa edit manual.</div>
-            </div>
-
-            <div class="row" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-              <button class="btnx" type="button" id="btnGps">
-                <i class="fa-solid fa-crosshairs"></i> Pakai Lokasi Saya
-              </button>
-              <button class="btnx btnx-soft" type="button" id="btnAutoFill" title="Isi alamat dari titik saat ini">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Isi Alamat Otomatis
-              </button>
-              <div class="muted" id="locStatus">
-                <i class="fa-regular fa-hand-pointer"></i> Klik peta untuk memilih titik jemput.
-              </div>
-            </div>
-
-            <div class="row grid2">
-              <div class="pill">
-                <div class="label"><i class="fa-solid fa-satellite"></i> Latitude</div>
-                <input type="text" id="latView" readonly placeholder="—">
-              </div>
-              <div class="pill">
-                <div class="label"><i class="fa-solid fa-satellite"></i> Longitude</div>
-                <input type="text" id="lngView" readonly placeholder="—">
-              </div>
-            </div>
-
-            <input type="hidden" name="latitude" id="latInput" value="{{ old('latitude') }}">
-            <input type="hidden" name="longitude" id="lngInput" value="{{ old('longitude') }}">
-
-            <div class="row" style="margin-top:10px;">
-              <div class="map-head">
-                <div class="muted">
-                  <i class="fa-solid fa-map-location-dot"></i> <b>Peta Titik Jemput</b>
+    <div class="page">
+        {{-- MODERN HEADER --}}
+        <div class="page-header">
+            <div class="container-fluid">
+                <div class="header-content">
+                    <h2 class="title"><i class="fa-solid fa-leaf"></i> Setor Sampah</h2>
+                    <p class="subtitle">
+                        Ubah sampahmu menjadi rupiah. Pilih metode, tentukan lokasi, dan biarkan kami yang mengurus sisanya.
+                    </p>
                 </div>
-                <div class="map-actions">
-                  <a class="btnx btnx-soft" id="gmapsLink" href="#" target="_blank" rel="noopener">
-                    <i class="fa-brands fa-google"></i> Buka Maps
-                  </a>
-                  <a class="btnx btnx-primary" id="gmapsDirLink" href="#" target="_blank" rel="noopener">
-                    <i class="fa-solid fa-route"></i> Navigasi
-                  </a>
-                </div>
-              </div>
-
-              <div id="map"></div>
-
-              <div class="hint" style="margin-top:10px">
-                <b>Tips:</b> klik peta untuk pasang marker, lalu geser marker untuk posisi yang tepat.
-              </div>
             </div>
-          </div>
-
-          <hr>
-
-          {{-- ITEMS --}}
-       
-
-          {{-- Sticky CTA Tambah Jenis --}}
-          <div class="add-sticky">
-            <button class="btnx btn-add is-pulse" id="btnAddJenis" type="button" onclick="addRow()">
-              <i class="fa-solid fa-circle-plus"></i> Tambah Jenis
-            </button>
-          </div>
-
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th style="width:40%"><i class="fa-solid fa-box"></i> Jenis Sampah</th>
-                  <th style="width:15%"><i class="fa-solid fa-scale-balanced"></i> Jumlah</th>
-                  <th style="width:15%"><i class="fa-solid fa-ruler"></i> Satuan</th>
-                  <th style="width:15%"><i class="fa-solid fa-tag"></i> Harga</th>
-                  <th style="width:15%"><i class="fa-solid fa-calculator"></i> Subtotal</th>
-                  <th class="cell-center" style="width:1%"><i class="fa-solid fa-trash"></i></th>
-                </tr>
-              </thead>
-              <tbody id="itemsBody"></tbody>
-            </table>
-          </div>
-
-          <div class="total-box">
-            <div class="left">
-              <i class="fa-solid fa-coins"></i>
-              <div>Total Estimasi</div>
-            </div>
-            <div>Rp <span id="grandTotal">0</span></div>
-          </div>
-
-          <div class="row" style="margin-top:12px;">
-            <label><i class="fa-solid fa-pen-to-square"></i> Catatan (opsional)</label>
-            <textarea name="catatan" rows="3">{{ old('catatan') }}</textarea>
-          </div>
-
         </div>
-      </div>
 
-      {{-- ACTION BAR BAWAH: pojok kanan --}}
-      <div class="actionbar">
         <div class="container-fluid">
-          <div class="inner">
-            <a class="btnx" href="{{ route('user.dashboard') }}">
-              <i class="fa-solid fa-arrow-left"></i> Kembali
-            </a>
-            <button class="btnx btnx-primary" type="submit">
-              <i class="fa-solid fa-paper-plane"></i> Kirim Setoran
-            </button>
-          </div>
-        </div>
-      </div>
+            <form method="POST" action="{{ route('user.setoran.store') }}" id="formSetoran">
+                @csrf
 
-    </form>
-  </div>
-</div>
+                {{-- MAIN CARD --}}
+                <div class="card main-card">
+                    <div class="card-head">
+                        <i class="fa-regular fa-clipboard" style="color:var(--brand)"></i> Detail Permintaan
+                    </div>
+
+                    <div class="content">
+                        {{-- METODE & JADWAL --}}
+                        <div class="row grid2">
+                            <div>
+                                <label><i class="fa-solid fa-truck-fast"></i> Metode Penyerahan *</label>
+                                <select name="metode" id="metodeSelect" required>
+                                    <option value="antar" {{ old('metode', 'antar') == 'antar' ? 'selected' : '' }}>Saya
+                                        Antar Sendiri</option>
+                                    <option value="jemput" {{ old('metode') == 'jemput' ? 'selected' : '' }}>Petugas Jemput
+                                        ke Lokasi</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label><i class="fa-regular fa-calendar-check"></i> Jadwal *</label>
+                                <div class="grid2" style="gap: 10px;">
+                                    <input type="date" id="ui_tgl_jemput" min="{{ date('Y-m-d') }}"
+                                        value="{{ date('Y-m-d') }}">
+                                    <select id="ui_slot_waktu">
+                                        <option value="08:00">Pagi (08:00 - 10:00)</option>
+                                        <option value="10:00">Siang (10:00 - 12:00)</option>
+                                        <option value="13:00">Sore (13:00 - 15:00)</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" name="jadwal_jemput" id="final_jadwal_jemput">
+                            </div>
+                        </div>
+
+                        {{-- JEMPUT SECTION (MAP) --}}
+                        <div id="jemputFields" style="display:none;">
+                            <hr style="border:0; border-top:1px dashed var(--line); margin: 24px 0;">
+
+                            <div class="row">
+                                <label><i class="fa-solid fa-map-location-dot"></i> Titik Jemput (Wajib)</label>
+                                <div class="map-wrapper">
+                                    <div class="map-container">
+                                        <div id="map"></div>
+                                        <div class="map-overlay-tools">
+                                            <button type="button" class="btn-tool" id="btnGps">
+                                                <i class="fa-solid fa-location-crosshairs"></i> <span>Gunakan Lokasi
+                                                    Saya</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="coordinate-display">
+                                        <div class="coord-item">LAT: <span id="latView">-</span></div>
+                                        <div class="coord-item">LNG: <span id="lngView">-</span></div>
+                                    </div>
+                                </div>
+                                <div id="locStatus" class="hint">
+                                    <i class="fa-solid fa-circle-info"></i> Aktifkan GPS, lalu klik tombol di atas peta.
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <label>Alamat Lengkap / Patokan *</label>
+                                <textarea name="alamat" id="alamatInput" rows="2" placeholder="Contoh: Pagar hitam, samping warung bakso..."
+                                    required>{{ old('alamat') }}</textarea>
+                            </div>
+                            <input type="hidden" name="latitude" id="latInput">
+                            <input type="hidden" name="longitude" id="lngInput">
+                        </div>
+
+                        <hr style="border:0; border-top:1px dashed var(--line); margin: 24px 0;">
+
+                        {{-- ITEMS TABLE --}}
+                        <div class="add-sticky">
+                            <button class="btn-add" id="btnAddJenis" type="button" onclick="addRow()">
+                                <i class="fa-solid fa-plus"></i> Tambah Item
+                            </button>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width:35%">Jenis Sampah</th>
+                                        <th style="width:15%">Berat</th>
+                                        <th style="width:10%">Satuan</th>
+                                        <th style="width:20%">Estimasi Harga</th>
+                                        <th style="width:20%">Subtotal</th>
+                                        <th style="width:1%"></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="itemsBody"></tbody>
+                            </table>
+                        </div>
+
+                        <div class="total-box">
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <i class="fa-solid fa-wallet"></i> Total Estimasi
+                            </div>
+                            <div style="font-size:1.1rem;">Rp <span id="grandTotal">0</span></div>
+                        </div>
+
+                        <div class="row" style="margin-top:20px;">
+                            <label>Catatan Tambahan (Opsional)</label>
+                            <textarea name="catatan" rows="2" placeholder="Pesan untuk petugas...">{{ old('catatan') }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ACTION BAR (LEGACY STYLE) --}}
+                <div class="actionbar">
+                    <div class="container-fluid">
+                        <div class="inner">
+                            <a class="btnx" href="{{ route('user.dashboard') }}">
+                                <i class="fa-solid fa-arrow-left"></i> Kembali
+                            </a>
+                            <button class="btnx btnx-primary" type="submit">
+                                <i class="fa-solid fa-paper-plane"></i> Kirim Setoran
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+        const kategoriData = @json($kategoriData);
+        let rowIndex = 0;
+        const rupiah = (n) => new Intl.NumberFormat('id-ID').format(n);
 
-<script>
-  // =========================
-  // DATA ITEM
-  // =========================
-  const kategoriData = @json($kategoriData);
-  const selectedId = @json((string)($selectedId ?? ''));
-
-  function rupiah(n){
-    try { return new Intl.NumberFormat('id-ID').format(n); }
-    catch(e){ return n; }
-  }
-
-  function buildSelect(name, selectedValue=''){
-    let html = `<select name="${name}" onchange="recalc()" required>`;
-    html += `<option value="">-- pilih --</option>`;
-    kategoriData.forEach(k => {
-      const label = `${k.nama} (${k.kategori ?? '-'})`;
-      const sel = (String(k.id) === String(selectedValue)) ? 'selected' : '';
-      html += `<option value="${k.id}" data-harga="${k.harga}" data-satuan="${k.satuan}" ${sel}>${label}</option>`;
-    });
-    html += `</select>`;
-    return html;
-  }
-
-  let rowIndex = 0;
-
-  function addRow(prefillKategoriId = ''){
-    const tbody = document.getElementById('itemsBody');
-    const tr = document.createElement('tr');
-
-    tr.innerHTML = `
-      <td>${buildSelect(`items[${rowIndex}][kategori_sampah_id]`, prefillKategoriId)}</td>
-      <td><input type="number" name="items[${rowIndex}][jumlah]" step="0.01" min="0.01" value="1" oninput="recalc()" required></td>
-      <td class="satuanCell">-</td>
-      <td class="hargaCell">-</td>
-      <td class="subtotalCell">0</td>
-      <td class="cell-center">
-        <button type="button" class="btnx btnx-danger" onclick="removeRow(this)">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-      </td>
-    `;
-
-    tbody.appendChild(tr);
-    rowIndex++;
-    recalc();
-
-    // UX: setelah tambah baris, scroll sedikit ke baris baru
-    tr.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  function removeRow(btn){
-    btn.closest('tr').remove();
-    recalc();
-  }
-
-  function recalc(){
-    const rows = Array.from(document.querySelectorAll('#itemsBody tr'));
-    let grand = 0;
-
-    rows.forEach(tr => {
-      const select = tr.querySelector('select');
-      const jumlahInput = tr.querySelector('input[type="number"]');
-
-      const opt = select.options[select.selectedIndex];
-      const harga = parseInt(opt?.dataset?.harga || '0', 10);
-      const satuan = opt?.dataset?.satuan || '';
-
-      const jumlah = parseFloat(jumlahInput.value || '0');
-      const subtotal = Math.round(jumlah * harga);
-
-      tr.querySelector('.satuanCell').innerText = satuan || '-';
-      tr.querySelector('.hargaCell').innerText = harga ? ('Rp ' + rupiah(harga)) : '-';
-      tr.querySelector('.subtotalCell').innerText = rupiah(subtotal);
-
-      grand += subtotal;
-    });
-
-    document.getElementById('grandTotal').innerText = rupiah(grand);
-  }
-
-  addRow(selectedId || '');
-
-  // matikan pulse tombol tambah jenis setelah 5 detik (biar gak ganggu)
-  setTimeout(() => {
-    const btn = document.getElementById('btnAddJenis');
-    if(btn) btn.classList.remove('is-pulse');
-  }, 5000);
-
-  // =========================
-  // JEMPUT TOGGLE
-  // =========================
-  const metodeSelect = document.getElementById('metodeSelect');
-  const jemputFields = document.getElementById('jemputFields');
-
-  function toggleJemput(){
-    const isJemput = metodeSelect.value === 'jemput';
-    jemputFields.style.display = isJemput ? 'block' : 'none';
-    if(isJemput) setTimeout(()=>{ if(map) map.invalidateSize(); }, 200);
-  }
-  metodeSelect.addEventListener('change', toggleJemput);
-  toggleJemput();
-
-  // =========================
-  // MAP + AUTO ADDRESS
-  // =========================
-  let map, marker;
-  let lastAutoAddress = '';
-
-  const locStatus   = document.getElementById('locStatus');
-  const latInput    = document.getElementById('latInput');
-  const lngInput    = document.getElementById('lngInput');
-  const latView     = document.getElementById('latView');
-  const lngView     = document.getElementById('lngView');
-  const alamatInput = document.getElementById('alamatInput');
-
-  const gmapsLink    = document.getElementById('gmapsLink');
-  const gmapsDirLink = document.getElementById('gmapsDirLink');
-
-  const defaultLat = 0.5071;
-  const defaultLng = 101.4478;
-
-  function updateLinks(lat, lng){
-    gmapsLink.href = `https://www.google.com/maps?q=${lat},${lng}`;
-    gmapsDirLink.href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
-  }
-
-  async function reverseGeocode(lat, lng){
-    try{
-      locStatus.innerHTML = `<span class="status-good"><i class="fa-solid fa-spinner fa-spin"></i> Mengambil alamat otomatis...</span>`;
-      const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
-      const res = await fetch(url, { headers: { 'Accept':'application/json', 'Accept-Language':'id' } });
-      const data = await res.json();
-
-      if(data && data.display_name){
-        lastAutoAddress = data.display_name;
-        if(!alamatInput.value || alamatInput.value.trim().length < 3){
-          alamatInput.value = lastAutoAddress;
+        // --- ITEM LOGIC ---
+        function buildSelect(name) {
+            let html = `<select name="${name}" onchange="recalc()" required><option value="">-- Pilih Sampah --</option>`;
+            kategoriData.forEach(k => {
+                html +=
+                    `<option value="${k.id}" data-harga="${k.harga}" data-satuan="${k.satuan}">${k.nama}</option>`;
+            });
+            return html + `</select>`;
         }
-        locStatus.innerHTML = `<span class="status-good"><i class="fa-solid fa-circle-check"></i> Alamat terisi otomatis. Kamu bisa edit jika perlu.</span>`;
-      }else{
-        locStatus.innerHTML = `<span class="status-bad"><i class="fa-solid fa-circle-xmark"></i> Alamat tidak ditemukan, isi manual.</span>`;
-      }
-    }catch(e){
-      locStatus.innerHTML = `<span class="status-bad"><i class="fa-solid fa-circle-xmark"></i> Gagal ambil alamat otomatis, isi manual.</span>`;
-    }
-  }
 
-  function setCoordinate(lat, lng, message){
-    const latFixed = Number(lat);
-    const lngFixed = Number(lng);
-
-    latInput.value = latFixed;
-    lngInput.value = lngFixed;
-
-    latView.value = latFixed.toFixed(6);
-    lngView.value = lngFixed.toFixed(6);
-
-    locStatus.innerText = message;
-    updateLinks(latFixed, lngFixed);
-
-    if(!marker){
-      marker = L.marker([latFixed, lngFixed], { draggable:true }).addTo(map);
-      marker.on('dragend', function(e){
-        const p = e.target.getLatLng();
-        setCoordinate(p.lat, p.lng, 'Marker digeser. Memperbarui alamat...');
-        reverseGeocode(p.lat, p.lng);
-      });
-    }else{
-      marker.setLatLng([latFixed, lngFixed]);
-    }
-
-    map.setView([latFixed, lngFixed], 17);
-    reverseGeocode(latFixed, lngFixed);
-  }
-
-  function initMap(){
-    const oldLat = latInput.value;
-    const oldLng = lngInput.value;
-
-    const startLat = oldLat ? Number(oldLat) : defaultLat;
-    const startLng = oldLng ? Number(oldLng) : defaultLng;
-
-    map = L.map('map').setView([startLat, startLng], 15);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom:19,
-      attribution:'© OpenStreetMap'
-    }).addTo(map);
-
-    map.on('click', function(e){
-      setCoordinate(e.latlng.lat, e.latlng.lng, 'Titik dipilih. Mengambil alamat...');
-    });
-
-    if(oldLat && oldLng){
-      setCoordinate(Number(oldLat), Number(oldLng), 'Lokasi jemput sudah tersimpan. Memperbarui alamat...');
-    }else{
-      latView.value = '';
-      lngView.value = '';
-      updateLinks(startLat, startLng);
-    }
-  }
-  initMap();
-
-  // GPS
-  document.getElementById('btnGps')?.addEventListener('click', useMyLocation);
-
-  function useMyLocation(){
-    if(!navigator.geolocation){
-      locStatus.innerHTML = `<span class="status-bad"><i class="fa-solid fa-ban"></i> Browser tidak mendukung GPS.</span>`;
-      return;
-    }
-
-    if(navigator.permissions && navigator.permissions.query){
-      navigator.permissions.query({ name: 'geolocation' }).then(p => {
-        if(p.state === 'denied'){
-          locStatus.innerHTML =
-            `<span class="status-bad"><i class="fa-solid fa-lock"></i> GPS diblokir browser. Izinkan Location di Site settings, atau pilih titik lewat peta.</span>`;
+        function addRow() {
+            const tbody = document.getElementById('itemsBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+            <td>${buildSelect(`items[${rowIndex}][kategori_sampah_id]`)}</td>
+            <td><input type="number" name="items[${rowIndex}][jumlah]" step="0.01" min="0.01" value="1" oninput="recalc()" required placeholder="0"></td>
+            <td class="satuanCell text-muted" style="text-align:center">-</td>
+            <td class="hargaCell text-muted">-</td>
+            <td class="subtotalCell" style="color:var(--brand-dark)">0</td>
+            <td style="text-align:center"><button type="button" class="btnx btnx-danger" onclick="this.closest('tr').remove(); recalc();"><i class="fa-solid fa-trash-can"></i></button></td>
+        `;
+            tbody.appendChild(tr);
+            rowIndex++;
+            recalc();
         }
-      }).catch(()=>{});
-    }
 
-    locStatus.innerHTML = `<span class="status-good"><i class="fa-solid fa-spinner fa-spin"></i> Mengambil lokasi GPS...</span>`;
+        function recalc() {
+            let grand = 0;
+            document.querySelectorAll('#itemsBody tr').forEach(tr => {
+                const select = tr.querySelector('select');
+                const qtyInput = tr.querySelector('input[type="number"]');
+                const opt = select.options[select.selectedIndex];
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setCoordinate(pos.coords.latitude, pos.coords.longitude, 'Lokasi GPS dipakai. Mengambil alamat...'),
-      (err) => {
-        locStatus.innerHTML =
-          `<span class="status-bad"><i class="fa-solid fa-circle-xmark"></i> GPS gagal (${err.message}). Kamu bisa pilih titik lewat peta.</span>`;
-      },
-      { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
-    );
-  }
+                const harga = parseInt(opt?.dataset?.harga || 0);
+                const qty = parseFloat(qtyInput.value || 0);
+                const sub = Math.round(qty * harga);
 
-  // Button: gunakan alamat auto
-  document.getElementById('btnAutoFill')?.addEventListener('click', () => {
-    if(!lastAutoAddress){
-      const lat = latInput.value, lng = lngInput.value;
-      if(lat && lng) reverseGeocode(lat, lng);
-      else alert('Pilih titik jemput dulu (klik peta / GPS).');
-      return;
-    }
-    alamatInput.value = lastAutoAddress;
-    locStatus.innerHTML = `<span class="status-good"><i class="fa-solid fa-circle-check"></i> Alamat otomatis dipakai. Kamu bisa edit jika perlu.</span>`;
-  });
+                tr.querySelector('.satuanCell').innerText = opt?.dataset?.satuan || '-';
+                tr.querySelector('.hargaCell').innerText = harga ? 'Rp ' + rupiah(harga) : '-';
+                tr.querySelector('.subtotalCell').innerText = rupiah(sub);
+                grand += sub;
+            });
+            document.getElementById('grandTotal').innerText = rupiah(grand);
+        }
 
-  // VALIDASI SUBMIT
-  document.querySelector('form')?.addEventListener('submit', function(e){
-    if(metodeSelect.value === 'jemput'){
-      if(!latInput.value || !lngInput.value){
-        e.preventDefault();
-        alert('Silakan pilih titik jemput di peta (klik peta / geser marker).');
-        return;
-      }
-      if(!alamatInput.value || alamatInput.value.trim().length < 3){
-        e.preventDefault();
-        alert('Alamat wajib diisi jika metode jemput.');
-        return;
-      }
-    }
-  });
-</script>
+        // --- MAP & GPS LOGIC (Auto Fill) ---
+        let map, marker;
+        const latInput = document.getElementById('latInput'),
+            lngInput = document.getElementById('lngInput');
+        const latView = document.getElementById('latView'),
+            lngView = document.getElementById('lngView');
+        const locStatus = document.getElementById('locStatus'),
+            alamatInput = document.getElementById('alamatInput');
+
+        function initMap() {
+            // Default View: Monas Jakarta (bisa diubah ke Riau sesuai kebutuhan projectmu)
+            map = L.map('map', {
+                scrollWheelZoom: false
+            }).setView([0.5071, 101.4478], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OSM'
+            }).addTo(map);
+
+            // Manual Click
+            map.on('click', e => setCoordinate(e.latlng.lat, e.latlng.lng, 'Titik dipilih manual.', false));
+        }
+
+        function setCoordinate(lat, lng, msg, forceFill) {
+            latInput.value = lat;
+            lngInput.value = lng;
+            latView.innerText = lat.toFixed(6);
+            lngView.innerText = lng.toFixed(6);
+
+            if (!marker) {
+                marker = L.marker([lat, lng], {
+                    draggable: true
+                }).addTo(map);
+                // Drag marker tidak auto-fill alamat (takut menimpa editan user), kecuali user minta
+                marker.on('dragend', e => setCoordinate(e.target.getLatLng().lat, e.target.getLatLng().lng,
+                    'Lokasi digeser.', false));
+            } else {
+                marker.setLatLng([lat, lng]);
+            }
+
+            map.setView([lat, lng], 17);
+            locStatus.innerHTML =
+                `<span style="color:var(--brand-dark)"><i class="fa-solid fa-check-circle"></i> ${msg}</span>`;
+
+            reverseGeocode(lat, lng, forceFill);
+        }
+
+        async function reverseGeocode(lat, lng, forceFill) {
+            if (forceFill) locStatus.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Mengambil alamat...';
+
+            try {
+                const res = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`
+                );
+                const data = await res.json();
+
+                // Logic: Auto fill hanya jika tombol GPS ditekan (forceFill) atau field alamat masih kosong/sedikit
+                if (data.display_name) {
+                    if (forceFill || alamatInput.value.length < 5) {
+                        alamatInput.value = data.display_name;
+                        locStatus.innerHTML =
+                            '<span style="color:var(--brand-dark)"><i class="fa-solid fa-map-pin"></i> Alamat otomatis terisi!</span>';
+                    }
+                }
+            } catch (e) {
+                console.error("Geocoding error");
+            }
+        }
+
+        // --- EVENTS ---
+        document.getElementById('btnGps').addEventListener('click', () => {
+            if (!navigator.geolocation) {
+                alert('Browser tidak mendukung GPS.');
+                return;
+            }
+            locStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Mencari sinyal GPS...';
+
+            navigator.geolocation.getCurrentPosition(
+                p => setCoordinate(p.coords.latitude, p.coords.longitude, 'GPS Berhasil!',
+                    true), // True = Paksa isi alamat
+                e => locStatus.innerHTML =
+                '<span class="text-danger">Gagal akses GPS. Pastikan Location aktif.</span>', {
+                    enableHighAccuracy: true
+                }
+            );
+        });
+
+        document.getElementById('metodeSelect').addEventListener('change', function() {
+            const isJemput = this.value === 'jemput';
+            document.getElementById('jemputFields').style.display = isJemput ? 'block' : 'none';
+            if (isJemput) setTimeout(() => map.invalidateSize(), 300);
+        });
+
+        document.getElementById('formSetoran').addEventListener('submit', function(e) {
+            // Merge Date + Time
+            const tgl = document.getElementById('ui_tgl_jemput').value;
+            const jam = document.getElementById('ui_slot_waktu').value;
+            document.getElementById('final_jadwal_jemput').value = tgl + 'T' + jam;
+
+            // Validasi Maps
+            if (document.getElementById('metodeSelect').value === 'jemput' && !latInput.value) {
+                e.preventDefault();
+                // Scroll ke map agar user sadar
+                document.getElementById('jemputFields').scrollIntoView({
+                    behavior: 'smooth'
+                });
+                alert("Mohon pilih titik penjemputan pada peta!");
+            }
+        });
+
+        window.onload = () => {
+            initMap();
+            addRow();
+        };
+    </script>
 @endpush

@@ -3,803 +3,580 @@
 @section('title', 'Dashboard Admin')
 
 @push('styles')
-<style>
-    :root {
-        --primary: #10b981;
-        --primary-dark: #059669;
-        --primary-light: #d1fae5;
-        --secondary: #3b82f6;
-        --danger: #ef4444;
-        --warning: #f59e0b;
-        --info: #06b6d4;
-        --white: #ffffff;
-        --bg: #f9fafb;
-        --ink: #111827;
-        --muted: #6b7280;
-        --line: #e5e7eb;
-        --hover-bg: #f3f4f6;
-        --radius: 12px;
-        --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-        --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
-        --transition: all 0.2s ease;
-    }
-
-    body {
-        background-color: var(--bg);
-        color: var(--ink);
-    }
-
-    /* Dashboard Container */
-    .dashboard-container {
-        padding: 24px;
-        width: 100%;
-        max-width: 100%;
-    }
-
-    /* Dashboard Header */
-    .dashboard-header {
-        margin-bottom: 32px;
-    }
-    
-    .dashboard-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--ink);
-        margin-bottom: 8px;
-    }
-    
-    .dashboard-header p {
-        color: var(--muted);
-        font-size: 15px;
-    }
-
-    /* Stats Grid */
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 20px;
-        margin-bottom: 32px;
-    }
-
-    /* Stat Card */
-    .stat-card {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 24px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--line);
-        transition: var(--transition);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .stat-card:hover {
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-lg);
-    }
-    
-    .stat-card.primary {
-        border-top: 4px solid var(--primary);
-    }
-    
-    .stat-card.secondary {
-        border-top: 4px solid var(--secondary);
-    }
-    
-    .stat-card.danger {
-        border-top: 4px solid var(--danger);
-    }
-    
-    .stat-card.warning {
-        border-top: 4px solid var(--warning);
-    }
-    
-    .stat-card.info {
-        border-top: 4px solid var(--info);
-    }
-    
-    .stat-card-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    
-    .stat-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-    }
-    
-    .stat-icon.primary {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        color: var(--white);
-    }
-    
-    .stat-icon.secondary {
-        background: linear-gradient(135deg, var(--secondary) 0%, #2563eb 100%);
-        color: var(--white);
-    }
-    
-    .stat-icon.danger {
-        background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
-        color: var(--white);
-    }
-    
-    .stat-icon.warning {
-        background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
-        color: var(--white);
-    }
-    
-    .stat-icon.info {
-        background: linear-gradient(135deg, var(--info) 0%, #0891b2 100%);
-        color: var(--white);
-    }
-    
-    .stat-numbers {
-        flex: 1;
-        margin-left: 16px;
-    }
-    
-    .stat-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--ink);
-        line-height: 1.2;
-    }
-    
-    .stat-label {
-        font-size: 14px;
-        color: var(--muted);
-        margin-top: 4px;
-        font-weight: 500;
-    }
-    
-    .stat-change {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 12px;
-        margin-top: 8px;
-        font-weight: 500;
-    }
-    
-    .stat-change.positive {
-        color: var(--primary);
-    }
-    
-    .stat-change.negative {
-        color: var(--danger);
-    }
-
-    /* Charts Section */
-    .charts-section {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-    
-    @media (max-width: 768px) {
-        .charts-section {
-            grid-template-columns: 1fr;
+    <style>
+        :root {
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --brand-soft: #ecfdf5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --radius: 16px;
         }
-    }
 
-    /* Chart Card */
-    .chart-card {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 24px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--line);
-    }
-    
-    .chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 24px;
-    }
-    
-    .chart-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--ink);
-    }
-    
-    .chart-subtitle {
-        font-size: 14px;
-        color: var(--muted);
-    }
-    
-    .chart-container {
-        position: relative;
-        height: 300px;
-        width: 100%;
-    }
-
-    /* Tables Section */
-    .tables-section {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-    
-    @media (max-width: 768px) {
-        .tables-section {
-            grid-template-columns: 1fr;
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: "Plus Jakarta Sans", sans-serif;
         }
-    }
 
-    /* Table Card */
-    .table-card {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 24px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--line);
-        overflow: hidden;
-    }
-    
-    .table-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    
-    .table-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--ink);
-    }
-    
-    .table-view-all {
-        font-size: 14px;
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: 500;
-        transition: var(--transition);
-    }
-    
-    .table-view-all:hover {
-        color: var(--primary-dark);
-    }
-    
-    .table-responsive {
-        overflow-x: auto;
-    }
-    
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-    
-    .table thead {
-        background-color: var(--primary-light);
-    }
-    
-    .table th {
-        padding: 12px 16px;
-        text-align: left;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--primary-dark);
-        border-bottom: 2px solid var(--line);
-        white-space: nowrap;
-    }
-    
-    .table tbody tr {
-        border-bottom: 1px solid var(--line);
-        transition: var(--transition);
-    }
-    
-    .table tbody tr:hover {
-        background-color: var(--hover-bg);
-    }
-    
-    .table td {
-        padding: 14px 16px;
-        font-size: 14px;
-        color: var(--ink);
-        vertical-align: middle;
-    }
-    
-    .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        text-align: center;
-        min-width: 80px;
-    }
-    
-    .status-badge.pending {
-        background-color: #fef3c7;
-        color: #92400e;
-    }
-    
-    .status-badge.dijemput {
-        background-color: #dbeafe;
-        color: #1e40af;
-    }
-    
-    .status-badge.selesai {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-    
-    .status-badge.ditolak {
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-
-    /* Progress Bars */
-    .progress-container {
-        margin-top: 8px;
-    }
-    
-    .progress-label {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 4px;
-        font-size: 12px;
-        color: var(--muted);
-    }
-    
-    .progress-bar {
-        height: 6px;
-        background-color: var(--line);
-        border-radius: 3px;
-        overflow: hidden;
-    }
-    
-    .progress-fill {
-        height: 100%;
-        border-radius: 3px;
-        transition: width 0.3s ease;
-    }
-    
-    .progress-fill.primary {
-        background: linear-gradient(90deg, var(--primary) 0%, var(--primary-dark) 100%);
-    }
-    
-    .progress-fill.secondary {
-        background: linear-gradient(90deg, var(--secondary) 0%, #2563eb 100%);
-    }
-    
-    .progress-fill.danger {
-        background: linear-gradient(90deg, var(--danger) 0%, #dc2626 100%);
-    }
-    
-    .progress-fill.warning {
-        background: linear-gradient(90deg, var(--warning) 0%, #d97706 100%);
-    }
-
-    /* Quick Stats */
-    .quick-stats {
-        background: var(--white);
-        border-radius: var(--radius);
-        padding: 24px;
-        box-shadow: var(--shadow);
-        border: 1px solid var(--line);
-        margin-bottom: 32px;
-    }
-    
-    .quick-stats-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--ink);
-        margin-bottom: 20px;
-    }
-    
-    .quick-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-    }
-    
-    .quick-stat-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-    
-    .quick-stat-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 18px;
-        background: var(--primary-light);
-        color: var(--primary);
-    }
-    
-    .quick-stat-content h4 {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--ink);
-        margin-bottom: 2px;
-    }
-    
-    .quick-stat-content p {
-        font-size: 12px;
-        color: var(--muted);
-    }
-
-    /* Empty State */
-    .empty-state {
-        text-align: center;
-        padding: 40px 20px;
-    }
-    
-    .empty-state i {
-        font-size: 48px;
-        color: var(--line);
-        margin-bottom: 16px;
-    }
-    
-    .empty-state h3 {
-        font-size: 18px;
-        color: var(--ink);
-        margin-bottom: 8px;
-    }
-    
-    .empty-state p {
-        color: var(--muted);
-        font-size: 14px;
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
         .dashboard-container {
-            padding: 16px;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-bottom: 60px;
         }
-        
-        .stats-grid {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-        
-        .stat-card {
-            padding: 20px;
-        }
-        
-        .stat-value {
-            font-size: 24px;
-        }
-        
-        .charts-section,
-        .tables-section {
-            gap: 16px;
-        }
-        
-        .chart-card,
-        .table-card {
-            padding: 20px;
-        }
-        
-        .chart-container {
-            height: 250px;
-        }
-    }
 
-    @media (max-width: 480px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
+        /* ===== HEADER ===== */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        
-        .stat-card-content {
-            flex-direction: column;
-            align-items: flex-start;
+
+        .page-title h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin: 0;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--brand-dark) 0%, var(--brand) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
-        
-        .stat-numbers {
-            margin-left: 0;
-            margin-top: 16px;
-            width: 100%;
+
+        .page-title p {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.95rem;
         }
-        
-        .chart-header {
-            flex-direction: column;
-            align-items: flex-start;
+
+        .date-badge {
+            background: #fff;
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid var(--line);
+            font-weight: 700;
+            color: var(--ink);
+            font-size: 0.9rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
             gap: 8px;
         }
-    }
-</style>
 
-<!-- Include Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        /* ===== QUICK STATS (TOP ROW) ===== */
+        .quick-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--line);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Decorative Line Top */
+        .stat-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--color-accent);
+        }
+
+        .st-primary {
+            --color-accent: #10b981;
+            --bg-icon: #ecfdf5;
+            --text-icon: #059669;
+        }
+
+        .st-blue {
+            --color-accent: #3b82f6;
+            --bg-icon: #eff6ff;
+            --text-icon: #2563eb;
+        }
+
+        .st-orange {
+            --color-accent: #f59e0b;
+            --bg-icon: #fffbeb;
+            --text-icon: #d97706;
+        }
+
+        .st-purple {
+            --color-accent: #8b5cf6;
+            --bg-icon: #f5f3ff;
+            --text-icon: #7c3aed;
+        }
+
+        .stat-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--bg-icon);
+            color: var(--text-icon);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--ink);
+            line-height: 1.1;
+            margin-bottom: 4px;
+        }
+
+        .stat-sub {
+            font-size: 0.8rem;
+            color: var(--muted);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-trend {
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .trend-up {
+            color: #10b981;
+        }
+
+        .trend-down {
+            color: #ef4444;
+        }
+
+        /* ===== MAIN GRID ===== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Chart Card */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* Progress List */
+        .progress-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .progress-item {
+            margin-bottom: 16px;
+        }
+
+        .progress-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .prog-head {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .prog-bar {
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .prog-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1s ease-in-out;
+        }
+
+        /* ===== TABLE SECTION ===== */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        thead th {
+            text-align: left;
+            padding: 16px 24px;
+            background: #f9fafb;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 800;
+            border-bottom: 1px solid var(--line);
+        }
+
+        tbody td {
+            padding: 16px 24px;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--line);
+            font-size: 0.9rem;
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .st-pending {
+            background: #fff7ed;
+            color: #c2410c;
+        }
+
+        .st-process {
+            background: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        .st-done {
+            background: #ecfdf5;
+            color: #047857;
+        }
+
+        .st-fail {
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--brand-soft);
+            color: var(--brand-dark);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @endpush
 
 @section('content')
-<div class="dashboard-container">
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-        <h1>Dashboard Admin</h1>
-        <p>Selamat datang! Berikut adalah ringkasan aktivitas sistem pengelolaan sampah.</p>
-    </div>
+    <div class="dashboard-container">
 
-    <!-- Quick Stats (Today) -->
-    <div class="quick-stats">
-        <h3 class="quick-stats-title">Statistik Hari Ini</h3>
+        {{-- Header --}}
+        <div class="dashboard-header">
+            <div class="page-title">
+                <h1>Dashboard Overview</h1>
+                <p>Ringkasan aktivitas sistem pengelolaan sampah hari ini.</p>
+            </div>
+            <div class="date-badge">
+                <i class="fa-regular fa-calendar"></i> {{ now()->format('d F Y') }}
+            </div>
+        </div>
+
+        {{-- QUICK STATS --}}
         <div class="quick-stats-grid">
-            <div class="quick-stat-item">
-                <div class="quick-stat-icon">
-                    <i class="fa-solid fa-recycle"></i>
-                </div>
-                <div class="quick-stat-content">
-                    <h4>{{ $todaySetoran }}</h4>
-                    <p>Setoran Hari Ini</p>
-                </div>
-            </div>
-            <div class="quick-stat-item">
-                <div class="quick-stat-icon">
-                    <i class="fa-solid fa-money-bill-wave"></i>
-                </div>
-                <div class="quick-stat-content">
-                    <h4>Rp {{ number_format($todayRevenue, 0, ',', '.') }}</h4>
-                    <p>Pendapatan Hari Ini</p>
-                </div>
-            </div>
-            <div class="quick-stat-item">
-                <div class="quick-stat-icon">
-                    <i class="fa-solid fa-user-plus"></i>
-                </div>
-                <div class="quick-stat-content">
-                    <h4>{{ $todayUsers }}</h4>
-                    <p>Pengguna Baru</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Stats Grid -->
-    <div class="stats-grid">
-        <!-- Total Users -->
-        <div class="stat-card primary">
-            <div class="stat-card-content">
-                <div class="stat-icon primary">
-                    <i class="fa-solid fa-users"></i>
-                </div>
-                <div class="stat-numbers">
-                    <div class="stat-value">{{ $totalUsers }}</div>
-                    <div class="stat-label">Total Pengguna</div>
-                    <div class="stat-change positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span>{{ $totalNasabah }} Nasabah</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Setoran -->
-        <div class="stat-card secondary">
-            <div class="stat-card-content">
-                <div class="stat-icon secondary">
-                    <i class="fa-solid fa-truck"></i>
-                </div>
-                <div class="stat-numbers">
-                    <div class="stat-value">{{ $totalSetoran }}</div>
-                    <div class="stat-label">Total Setoran</div>
-                    <div class="stat-change positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span>{{ $totalSetoranSelesai }} Selesai</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Revenue -->
-        <div class="stat-card warning">
-            <div class="stat-card-content">
-                <div class="stat-icon warning">
-                    <i class="fa-solid fa-money-bill-trend-up"></i>
-                </div>
-                <div class="stat-numbers">
-                    <div class="stat-value">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
+            <div class="stat-card st-primary">
+                <div class="stat-head">
                     <div class="stat-label">Total Pendapatan</div>
-                    <div class="stat-change positive">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span>Rp {{ number_format($monthlyRevenue, 0, ',', '.') }} Bulan Ini</span>
+                    <div class="stat-icon"><i class="fa-solid fa-wallet"></i></div>
+                </div>
+                <div class="stat-value">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
+                <div class="stat-sub">
+                    <span class="stat-trend trend-up"><i class="fa-solid fa-arrow-trend-up"></i>
+                        +{{ number_format($todayRevenue, 0, ',', '.') }}</span>
+                    <span>hari ini</span>
+                </div>
+            </div>
+
+            <div class="stat-card st-blue">
+                <div class="stat-head">
+                    <div class="stat-label">Total Setoran</div>
+                    <div class="stat-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                </div>
+                <div class="stat-value">{{ number_format($totalSetoran) }}</div>
+                <div class="stat-sub">
+                    <span class="stat-trend trend-up">+{{ $todaySetoran }}</span>
+                    <span>permintaan baru hari ini</span>
+                </div>
+            </div>
+
+            <div class="stat-card st-purple">
+                <div class="stat-head">
+                    <div class="stat-label">Total Pengguna</div>
+                    <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+                </div>
+                <div class="stat-value">{{ $totalUsers }}</div>
+                <div class="stat-sub">
+                    <span>{{ $totalNasabah }} Nasabah, {{ $totalPetugas }} Petugas</span>
+                </div>
+            </div>
+
+            <div class="stat-card st-orange">
+                <div class="stat-head">
+                    <div class="stat-label">Data Sampah</div>
+                    <div class="stat-icon"><i class="fa-solid fa-recycle"></i></div>
+                </div>
+                <div class="stat-value">{{ $totalJenisSampah }}</div>
+                <div class="stat-sub">
+                    <span>Terbagi dalam {{ $totalKategori }} Kategori Master</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- MAIN CONTENT GRID --}}
+        <div class="main-grid">
+
+            {{-- LEFT COL: CHARTS --}}
+            <div style="display:flex; flex-direction:column; gap:24px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Distribusi Status Setoran</h3>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Kategori & Jenis -->
-        <div class="stat-card info">
-            <div class="stat-card-content">
-                <div class="stat-icon info">
-                    <i class="fa-solid fa-tags"></i>
-                </div>
-                <div class="stat-numbers">
-                    <div class="stat-value">{{ $totalJenisSampah }}</div>
-                    <div class="stat-label">Jenis Sampah</div>
-                    <div class="stat-change positive">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span>{{ $totalKategori }} Kategori</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Section -->
-    <div class="charts-section">
-        <!-- Setoran Status Distribution -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div>
-                    <h3 class="chart-title">Distribusi Status Setoran</h3>
-                    <p class="chart-subtitle">Persentase berdasarkan status</p>
-                </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="statusChart"></canvas>
-            </div>
-        </div>
-
-        <!-- User Role Distribution -->
-        <div class="chart-card">
-            <div class="chart-header">
-                <div>
-                    <h3 class="chart-title">Distribusi Peran Pengguna</h3>
-                    <p class="chart-subtitle">Jumlah pengguna berdasarkan peran</p>
-                </div>
-            </div>
-            <div class="chart-container">
-                <canvas id="roleChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Tables Section -->
-    <div class="tables-section">
-        <!-- Recent Setoran -->
-        <div class="table-card">
-            <div class="table-header">
-                <h3 class="table-title">Setoran Terbaru</h3>
-               
-            </div>
-            <div class="table-responsive">
-                @if($recentSetoran->count() > 0)
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Nasabah</th>
-                                <th>Petugas</th>
-                                <th>Status</th>
-                                <th>Tanggal</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($recentSetoran as $setoran)
-                            <tr>
-                                <td>#{{ str_pad($setoran->id, 6, '0', STR_PAD_LEFT) }}</td>
-                                <td>{{ $setoran->user->name ?? 'Tidak Diketahui' }}</td>
-                                <td>{{ $setoran->petugas->name ?? 'Belum Ditugaskan' }}</td>
-                                <td>
-                                    <span class="status-badge {{ $setoran->status }}">
-                                        {{ ucfirst($setoran->status) }}
-                                    </span>
-                                </td>
-                                <td>{{ $setoran->created_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="empty-state">
-                        <i class="fa-solid fa-clipboard-list"></i>
-                        <h3>Tidak Ada Setoran</h3>
-                        <p>Belum ada data setoran sampah.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Top Kategori -->
-        <div class="table-card">
-            <div class="table-header">
-                <h3 class="table-title">Kategori Populer</h3>
-                <a href="{{ route('kategori_sampah.index') }}" class="table-view-all">
-                    Lihat Semua <i class="fa-solid fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="table-responsive">
-                @if($topKategori->count() > 0)
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Kategori</th>
-                                <th>Transaksi</th>
-                                <th>Total Berat</th>
-                                <th>Pendapatan</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($topKategori as $kategori)
-                            <tr>
-                                <td>
-                                    <div class="font-medium">{{ $kategori->nama_sampah }}</div>
-                                    <div class="text-xs text-muted">{{ $kategori->masterKategori->nama_kategori ?? 'Tidak ada' }}</div>
-                                </td>
-                                <td>{{ $kategori->jumlah_transaksi ?? 0 }}</td>
-                                <td>{{ number_format($kategori->total_berat ?? 0, 2) }} kg</td>
-                                <td>Rp {{ number_format($kategori->total_pendapatan ?? 0, 0, ',', '.') }}</td>
-                            </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <div class="empty-state">
-                        <i class="fa-solid fa-tags"></i>
-                        <h3>Tidak Ada Kategori</h3>
-                        <p>Belum ada data kategori sampah.</p>
-                    </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Setoran Progress Bars -->
-    <div class="chart-card">
-        <div class="chart-header">
-            <h3 class="chart-title">Progress Setoran</h3>
-            <p class="chart-subtitle">Distribusi berdasarkan status</p>
-        </div>
-        <div style="padding: 20px 0;">
-            @php
-                $statuses = [
-                    'pending' => ['label' => 'Pending', 'color' => 'warning', 'count' => $totalSetoranPending],
-                    'dijemput' => ['label' => 'Dijemput', 'color' => 'secondary', 'count' => $totalSetoranDijemput],
-                    'selesai' => ['label' => 'Selesai', 'color' => 'primary', 'count' => $totalSetoranSelesai],
-                    'ditolak' => ['label' => 'Ditolak', 'color' => 'danger', 'count' => $totalSetoranDitolak],
-                ];
-                $totalAll = array_sum(array_column($statuses, 'count'));
-            @endphp
-            
-            @foreach($statuses as $status => $data)
-                @if($totalAll > 0)
-                    @php
-                        $percentage = $totalAll > 0 ? ($data['count'] / $totalAll) * 100 : 0;
-                    @endphp
-                    <div class="progress-container">
-                        <div class="progress-label">
-                            <span>{{ $data['label'] }}</span>
-                            <span>{{ $data['count'] }} ({{ number_format($percentage, 1) }}%)</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill {{ $data['color'] }}" style="width: {{ $percentage }}%"></div>
+                    <div class="card-body">
+                        <div style="height: 250px;">
+                            <canvas id="statusChart"></canvas>
                         </div>
                     </div>
-                @endif
-            @endforeach
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Setoran Terbaru</h3>
+                        <a href="#"
+                            style="font-size:0.85rem; font-weight:700; color:var(--brand); text-decoration:none;">Lihat
+                            Semua</a>
+                    </div>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nasabah</th>
+                                    <th>Status</th>
+                                    <th>Waktu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($recentSetoran as $row)
+                                    <tr>
+                                        <td style="font-family:monospace;">#{{ str_pad($row->id, 5, '0', STR_PAD_LEFT) }}
+                                        </td>
+                                        <td>
+                                            <div class="user-info">
+                                                <div class="avatar">{{ substr($row->user->name ?? 'U', 0, 1) }}</div>
+                                                <div>{{ Str::limit($row->user->name ?? 'User', 15) }}</div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @php
+                                                $cls = match ($row->status) {
+                                                    'pending' => 'st-pending',
+                                                    'dijemput', 'proses' => 'st-process',
+                                                    'selesai' => 'st-done',
+                                                    default => 'st-fail',
+                                                };
+                                            @endphp
+                                            <span
+                                                class="status-pill {{ $cls }}">{{ ucfirst($row->status) }}</span>
+                                        </td>
+                                        <td style="color:var(--muted); font-size:0.8rem;">
+                                            {{ $row->created_at->diffForHumans() }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="4" style="text-align:center; padding:30px; color:var(--muted);">
+                                            Belum ada data.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            {{-- RIGHT COL: PROGRESS & TOP --}}
+            <div style="display:flex; flex-direction:column; gap:24px;">
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Progress Hari Ini</h3>
+                    </div>
+                    <div class="card-body">
+                        @php
+                            $totalAll = array_sum($setoranStatus);
+                            $colors = [
+                                'pending' => '#f59e0b',
+                                'dijemput' => '#3b82f6',
+                                'selesai' => '#10b981',
+                                'ditolak' => '#ef4444',
+                            ];
+                            $labels = [
+                                'pending' => 'Menunggu',
+                                'dijemput' => 'Dijemput',
+                                'selesai' => 'Selesai',
+                                'ditolak' => 'Ditolak',
+                            ];
+                        @endphp
+
+                        <ul class="progress-list">
+                            @foreach ($setoranStatus as $key => $val)
+                                @php $pct = $totalAll > 0 ? ($val/$totalAll)*100 : 0; @endphp
+                                <li class="progress-item">
+                                    <div class="prog-head">
+                                        <span>{{ $labels[$key] ?? ucfirst($key) }}</span>
+                                        <span>{{ $val }} <span
+                                                style="color:var(--muted); font-weight:400;">({{ round($pct) }}%)</span></span>
+                                    </div>
+                                    <div class="prog-bar">
+                                        <div class="prog-fill"
+                                            style="width:{{ $pct }}%; background:{{ $colors[$key] ?? '#ccc' }};">
+                                        </div>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Top Kategori</h3>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        @foreach ($topKategori as $cat)
+                            <div
+                                style="padding:16px 24px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center;">
+                                <div style="display:flex; gap:12px; align-items:center;">
+                                    <div
+                                        style="width:36px; height:36px; background:var(--bg); border-radius:8px; display:grid; place-items:center; color:var(--muted);">
+                                        {{ $loop->iteration }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight:700; color:var(--ink);">{{ $cat->nama_sampah }}</div>
+                                        <div style="font-size:0.8rem; color:var(--muted);">{{ $cat->jumlah_transaksi }}
+                                            Transaksi</div>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-weight:800; color:var(--brand-dark);">Rp
+                                        {{ number_format($cat->total_pendapatan ?? 0, 0, ',', '.') }}</div>
+                                    <div style="font-size:0.75rem; color:var(--muted);">Total</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+            </div>
         </div>
+
     </div>
-</div>
 @endsection
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Status Distribution Chart (Doughnut)
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        const statusChart = new Chart(statusCtx, {
+    <script>
+        const ctx = document.getElementById('statusChart').getContext('2d');
+        new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Pending', 'Dijemput', 'Selesai', 'Ditolak'],
+                labels: ['Menunggu', 'Dijemput', 'Selesai', 'Ditolak'],
                 datasets: [{
                     data: [
                         {{ $setoranStatus['pending'] }},
@@ -807,14 +584,9 @@
                         {{ $setoranStatus['selesai'] }},
                         {{ $setoranStatus['ditolak'] }}
                     ],
-                    backgroundColor: [
-                        '#f59e0b', // warning
-                        '#3b82f6', // secondary
-                        '#10b981', // primary
-                        '#ef4444'  // danger
-                    ],
+                    backgroundColor: ['#f59e0b', '#3b82f6', '#10b981', '#ef4444'],
                     borderWidth: 0,
-                    hoverOffset: 15
+                    hoverOffset: 4
                 }]
             },
             options: {
@@ -822,97 +594,17 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        position: 'bottom',
+                        position: 'right',
                         labels: {
-                            padding: 20,
+                            usePointStyle: true,
                             font: {
-                                size: 12
+                                family: "'Plus Jakarta Sans', sans-serif"
                             }
                         }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                label += context.raw + ' setoran';
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        // User Role Distribution Chart (Bar)
-        const roleCtx = document.getElementById('roleChart').getContext('2d');
-        const roleChart = new Chart(roleCtx, {
-            type: 'bar',
-            data: {
-                labels: ['Admin', 'Petugas', 'Nasabah'],
-                datasets: [{
-                    label: 'Jumlah Pengguna',
-                    data: [
-                        {{ $userRoleDistribution['admin'] }},
-                        {{ $userRoleDistribution['petugas'] }},
-                        {{ $userRoleDistribution['user'] }}
-                    ],
-                    backgroundColor: [
-                        'rgba(16, 185, 129, 0.7)',
-                        'rgba(59, 130, 246, 0.7)',
-                        'rgba(139, 92, 246, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgb(16, 185, 129)',
-                        'rgb(59, 130, 246)',
-                        'rgb(139, 92, 246)'
-                    ],
-                    borderWidth: 1,
-                    borderRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
                     }
                 },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            drawBorder: false
-                        },
-                        ticks: {
-                            stepSize: 1
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
+                cutout: '70%'
             }
         });
-
-        // Update chart on window resize
-        window.addEventListener('resize', function() {
-            statusChart.resize();
-            roleChart.resize();
-        });
-
-       
-
-        // Format number function
-        function formatNumber(num) {
-            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
-        }
-    });
-</script>
+    </script>
 @endpush
-

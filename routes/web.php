@@ -1,15 +1,15 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-
+use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminSetoranController;
 use App\Http\Controllers\KategoriSampahController;
 use App\Http\Controllers\MasterKategoriSampahController;
-
-use App\Http\Controllers\SetoranSampahController;
 use App\Http\Controllers\PetugasSetoranController;
-use App\Http\Controllers\AdminSetoranController;
-use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SetoranSampahController;
+use App\Http\Controllers\UserBantuanController;
+use App\Http\Controllers\UserStatistikController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,8 +31,13 @@ Route::get('/dashboard', function () {
     $user = auth()->user();
     $role = $user->role ?? null;
 
-    if ($role === 'admin')   return redirect()->route('admin.dashboard');
-    if ($role === 'petugas') return redirect()->route('petugas.setoran.index');
+    if ($role === 'admin') {
+        return redirect()->route('admin.dashboard');
+    }
+
+    if ($role === 'petugas') {
+        return redirect()->route('petugas.setoran.index');
+    }
 
     return redirect()->route('user.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -43,7 +48,7 @@ Route::get('/dashboard', function () {
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
-    Route::get('/profile',  [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
@@ -83,6 +88,12 @@ Route::middleware(['auth', 'role:user'])
 
         Route::get('/peta/data', [SetoranSampahController::class, 'mapUserData'])
             ->name('map.data');
+
+        Route::get('/statistik', [UserStatistikController::class, 'index'])
+            ->name('statistik.index');
+
+        Route::get('/bantuan', [UserBantuanController::class, 'index'])
+            ->name('bantuan.index');
     });
 
 /*

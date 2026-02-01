@@ -4,723 +4,273 @@
 
 @push('styles')
 <style>
-    /* ===== DATA SAMPAH PAGE STYLES ===== */
-    .data-sampah-page {
-        min-height: calc(100vh - 100px);
+    :root {
+        --brand: #10b981;
+        --brand-dark: #059669;
+        --brand-soft: #ecfdf5;
+        --bg: #f8fafc;
+        --card: #ffffff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --radius: 16px;
+        --danger: #ef4444;
     }
 
-    /* Page Header */
-    .data-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 32px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--line);
-        flex-wrap: wrap;
-        gap: 16px;
+    /* ===== PAGE HEADER ===== */
+    .page-header {
+        display: flex; justify-content: space-between; align-items: flex-end;
+        margin-bottom: 24px; gap: 20px; flex-wrap: wrap;
     }
-    
-    .data-header .page-title {
-        font-size: 28px;
-        margin-bottom: 4px;
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+    .page-title h1 {
+        font-size: 1.75rem; font-weight: 800; color: var(--ink); margin: 0;
+        letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;
     }
-    
-    .data-header .page-subtitle {
-        font-size: 15px;
-        color: var(--muted);
-        max-width: 600px;
-        line-height: 1.6;
-    }
+    .page-title p { margin: 6px 0 0; color: var(--muted); font-size: 0.95rem; }
 
-    /* Action Button */
-    .btn-master {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 24px;
-        border-radius: var(--radius);
-        background: var(--primary-light);
-        color: var(--primary-dark);
-        font-weight: 600;
-        font-size: 14px;
-        text-decoration: none;
-        border: 1px solid var(--primary);
-        transition: var(--transition);
+    .btn-action {
+        padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem;
+        display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+        transition: .2s; border: 1px solid transparent; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
     }
-    
-    .btn-master:hover {
-        background: var(--primary);
-        color: var(--white);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.2);
-    }
+    .btn-primary { background: var(--brand); color: #fff; border-color: var(--brand); }
+    .btn-primary:hover { background: var(--brand-dark); transform: translateY(-2px); }
 
-    /* Success Alert */
-    .alert-success {
-        background: var(--primary-light);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        border-radius: var(--radius);
-        padding: 16px 20px;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--primary-dark);
-        font-weight: 500;
-        animation: slideIn 0.3s ease-out;
-    }
-    
-    .alert-success i {
-        color: var(--primary);
-        font-size: 18px;
-    }
+    .btn-secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+    .btn-secondary:hover { border-color: var(--brand); color: var(--brand); transform: translateY(-2px); }
 
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    /* ===== STATS ROW ===== */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;
     }
+    .stat-card {
+        background: var(--card); padding: 16px; border-radius: 16px; border: 1px solid var(--line);
+        display: flex; align-items: center; gap: 12px;
+    }
+    .stat-icon {
+        width: 42px; height: 42px; border-radius: 10px; background: var(--brand-soft);
+        color: var(--brand-dark); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .stat-info .val { font-size: 1.25rem; font-weight: 800; color: var(--ink); line-height: 1; }
+    .stat-info .lbl { font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; }
 
-    /* Main Card */
-    .data-card {
-        background: var(--white);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow-sm);
-        overflow: hidden;
-        margin-bottom: 32px;
+    /* ===== MAIN CARD ===== */
+    .content-card {
+        background: var(--card); border-radius: 20px; border: 1px solid var(--line);
+        overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.03);
     }
 
     /* Toolbar */
-    .data-toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 24px;
-        border-bottom: 1px solid var(--line);
-        background: var(--white);
-        flex-wrap: wrap;
-        gap: 16px;
+    .toolbar {
+        padding: 20px; border-bottom: 1px solid var(--line); background: #fff;
+        display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
     }
-    
-    .toolbar-left,
-    .toolbar-right {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
+    .search-wrapper {
+        display: flex; align-items: center; gap: 8px; background: var(--bg);
+        padding: 4px 4px 4px 12px; border-radius: 12px; border: 1px solid var(--line);
     }
-
-    /* Add Button */
-    .btn-add {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 20px;
-        border-radius: var(--radius);
-        background: var(--primary);
-        color: var(--white);
-        font-weight: 600;
-        font-size: 14px;
-        text-decoration: none;
-        border: 1px solid var(--primary);
-        transition: var(--transition);
-        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-    }
-    
-    .btn-add:hover {
-        background: var(--primary-dark);
-        border-color: var(--primary-dark);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-    }
-
-    /* Search Form */
-    .search-form {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    
     .search-input {
-        padding: 10px 16px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
-        background: var(--white);
-        color: var(--ink);
-        font-size: 14px;
-        min-width: 250px;
-        transition: var(--transition);
+        border: none; background: transparent; outline: none; font-weight: 600; color: var(--ink); width: 220px;
     }
-    
-    .search-input:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    .btn-search-icon {
+        width: 32px; height: 32px; background: var(--brand); color: #fff; border-radius: 8px;
+        border: none; cursor: pointer; display: grid; place-items: center; transition: .2s;
     }
-    
-    .search-input::placeholder {
-        color: var(--muted);
-    }
-    
-    .btn-search {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 20px;
-        border-radius: var(--radius-sm);
-        background: var(--bg);
-        color: var(--ink);
-        font-weight: 600;
-        font-size: 14px;
-        text-decoration: none;
-        border: 1px solid var(--line);
-        transition: var(--transition);
-        cursor: pointer;
-    }
-    
-    .btn-search:hover {
-        background: var(--hover-bg);
-        border-color: var(--primary);
-        color: var(--primary);
-    }
-    
-    .btn-reset {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
-        border-radius: var(--radius-sm);
-        background: transparent;
-        color: var(--muted);
-        font-weight: 500;
-        font-size: 14px;
-        text-decoration: none;
-        border: 1px solid transparent;
-        transition: var(--transition);
-        cursor: pointer;
-    }
-    
-    .btn-reset:hover {
-        color: var(--primary);
-        background: var(--primary-light);
-    }
+    .btn-search-icon:hover { background: var(--brand-dark); }
 
-    /* Table Container */
-    .table-container {
-        overflow-x: auto;
-        max-height: 500px;
-        overflow-y: auto;
-        background: var(--white);
-    }
-    
-    /* Data Table */
-    .data-table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 800px;
-    }
-    
-    .data-table thead {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-    }
-    
-    .data-table thead tr {
-        background: var(--primary-light);
-        border-bottom: 2px solid var(--primary);
-    }
-    
-    .data-table th {
-        padding: 16px 20px;
-        text-align: left;
-        font-weight: 600;
-        color: var(--primary-dark);
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        white-space: nowrap;
-    }
-    
-    .data-table tbody tr {
+    /* Table */
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+    thead th {
+        text-align: left; padding: 16px 20px; background: #f9fafb;
+        font-size: 0.75rem; text-transform: uppercase; color: var(--muted); font-weight: 800; letter-spacing: 0.5px;
         border-bottom: 1px solid var(--line);
-        transition: var(--transition);
     }
-    
-    .data-table tbody tr:hover {
-        background: var(--hover-bg);
+    tbody td {
+        padding: 16px 20px; vertical-align: middle; border-bottom: 1px solid var(--line);
+        color: var(--ink); font-size: 0.9rem; font-weight: 600;
     }
-    
-    .data-table td {
-        padding: 20px;
-        vertical-align: middle;
-        color: var(--ink);
-        font-size: 14px;
-    }
-    
-    .data-table .row-number {
-        color: var(--muted);
-        font-weight: 500;
-        font-variant-numeric: tabular-nums;
-    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
 
-    /* Image Thumbnail */
-    .image-thumbnail {
-        width: 60px;
-        height: 60px;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--line);
-        overflow: hidden;
-        background: var(--bg);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Custom Cells */
+    .col-img { width: 80px; }
+    .thumb-wrap {
+        width: 50px; height: 50px; border-radius: 10px; overflow: hidden; border: 1px solid var(--line);
+        background: #f1f5f9; display: flex; align-items: center; justify-content: center; color: #cbd5e1;
     }
-    
-    .image-thumbnail img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .image-thumbnail.no-image {
-        background: var(--primary-light);
-        color: var(--primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
+    .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+    .thumb-wrap:hover img { transform: scale(1.1); cursor: zoom-in; }
 
-    /* Category Badge */
-    .category-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: 20px;
-        background: var(--bg);
-        color: var(--ink);
-        font-weight: 500;
-        font-size: 13px;
-        border: 1px solid var(--line);
+    .badge-cat {
+        display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 8px;
+        background: #eff6ff; color: #3b82f6; font-size: 0.75rem; font-weight: 700; border: 1px solid #dbeafe;
     }
-    
-    .category-badge i {
-        color: var(--primary);
-        font-size: 12px;
-    }
+    .price-tag { font-family: monospace; font-size: 0.95rem; color: var(--brand-dark); font-weight: 800; }
 
-    /* Price Cell */
-    .price-cell {
-        font-weight: 600;
-        color: var(--primary-dark);
-        font-variant-numeric: tabular-nums;
+    /* Actions */
+    .action-group { display: flex; gap: 8px; }
+    .btn-icon {
+        width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center;
+        border: 1px solid transparent; transition: .2s; cursor: pointer; text-decoration: none;
     }
+    .btn-edit { background: #eff6ff; color: #3b82f6; border-color: #dbeafe; }
+    .btn-edit:hover { background: #3b82f6; color: #fff; }
+    .btn-del { background: #fef2f2; color: #ef4444; border-color: #fee2e2; }
+    .btn-del:hover { background: #ef4444; color: #fff; }
 
-    /* Unit Cell */
-    .unit-cell {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 6px 12px;
-        border-radius: var(--radius-sm);
-        background: var(--bg);
-        color: var(--ink);
-        font-weight: 500;
-        font-size: 13px;
-    }
+    /* Footer & Empty */
+    .card-footer { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--line); }
+    .empty-state { padding: 60px 20px; text-align: center; }
+    .empty-icon { font-size: 3rem; color: #cbd5e1; margin-bottom: 10px; }
 
-    /* Action Buttons */
-    .action-buttons {
-        display: flex;
-        gap: 8px;
-        align-items: center;
+    /* Alert Float */
+    .alert-float {
+        position: fixed; top: 20px; right: 20px; z-index: 9999;
+        background: #ecfdf5; border: 1px solid #10b981; color: #065f46;
+        padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        display: flex; align-items: center; gap: 12px; font-weight: 700;
+        animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    
-    .btn-edit {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        border-radius: var(--radius-sm);
-        background: var(--primary-light);
-        color: var(--primary-dark);
-        font-weight: 500;
-        font-size: 13px;
-        text-decoration: none;
-        border: 1px solid var(--primary-light);
-        transition: var(--transition);
-        white-space: nowrap;
-    }
-    
-    .btn-edit:hover {
-        background: var(--primary);
-        color: var(--white);
-        border-color: var(--primary);
-    }
-    
-    .btn-delete {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        border-radius: var(--radius-sm);
-        background: #fef2f2;
-        color: #dc2626;
-        font-weight: 500;
-        font-size: 13px;
-        text-decoration: none;
-        border: 1px solid #fecaca;
-        transition: var(--transition);
-        cursor: pointer;
-        white-space: nowrap;
-    }
-    
-    .btn-delete:hover {
-        background: #dc2626;
-        color: white;
-        border-color: #dc2626;
-    }
-
-    /* Empty State */
-    .empty-state {
-        padding: 80px 20px;
-        text-align: center;
-        background: var(--bg);
-    }
-    
-    .empty-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 20px;
-        border-radius: 50%;
-        background: var(--primary-light);
-        display: grid;
-        place-items: center;
-        color: var(--primary);
-        font-size: 32px;
-    }
-    
-    .empty-text {
-        font-size: 18px;
-        color: var(--muted);
-        margin-bottom: 8px;
-        font-weight: 600;
-    }
-    
-    .empty-subtext {
-        font-size: 14px;
-        color: var(--muted);
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    /* Footer (Pagination & Info) */
-    .table-footer {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 20px 24px;
-        border-top: 1px solid var(--line);
-        background: var(--white);
-        flex-wrap: wrap;
-        gap: 16px;
-    }
-    
-    .pagination-info {
-        font-size: 14px;
-        color: var(--muted);
-        font-weight: 500;
-    }
-    
-    .pagination {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    
-    .pagination .page-link,
-    .pagination a,
-    .pagination span {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 40px;
-        height: 40px;
-        padding: 0 12px;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--line);
-        background: var(--white);
-        color: var(--ink);
-        font-weight: 500;
-        font-size: 14px;
-        text-decoration: none;
-        transition: var(--transition);
-    }
-    
-    .pagination .page-item.active .page-link,
-    .pagination .active span {
-        background: var(--primary);
-        border-color: var(--primary);
-        color: var(--white);
-    }
-    
-    .pagination .page-link:hover:not(.active) {
-        background: var(--hover-bg);
-        border-color: var(--primary);
-        color: var(--primary);
-    }
-    
-    .pagination .disabled span {
-        background: var(--bg);
-        color: var(--muted);
-        cursor: not-allowed;
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .data-header {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .data-toolbar {
-            flex-direction: column;
-            align-items: stretch;
-        }
-        
-        .toolbar-left,
-        .toolbar-right {
-            width: 100%;
-        }
-        
-        .toolbar-left {
-            justify-content: space-between;
-        }
-        
-        .search-form {
-            width: 100%;
-        }
-        
-        .search-input {
-            flex: 1;
-            min-width: 0;
-        }
-        
-        .data-table th,
-        .data-table td {
-            padding: 12px 16px;
-        }
-        
-        .action-buttons {
-            flex-direction: column;
-            align-items: stretch;
-            gap: 8px;
-        }
-        
-        .btn-edit,
-        .btn-delete {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .table-footer {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .page-title {
-            font-size: 24px;
-        }
-        
-        .btn-add,
-        .btn-master {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .image-thumbnail {
-            width: 50px;
-            height: 50px;
-        }
-        
-        .price-cell,
-        .unit-cell {
-            font-size: 12px;
-        }
-        
-        .data-table {
-            min-width: 600px;
-        }
-    }
+    @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
 @endpush
 
 @section('content')
-<div class="data-sampah-page">
-    <!-- Page Header -->
-    <div class="data-header">
-        <div>
-            <h1 class="page-title">Data Kategori Sampah</h1>
-            <p class="page-subtitle">Kelola jenis sampah, kategori, harga, dan gambar referensi untuk sistem setoran sampah.</p>
-        </div>
-        
-        <a href="{{ route('master_kategori_sampah.index') }}" class="btn-master">
-            <i class="fa-solid fa-layer-group"></i>
-            <span>Master Kategori</span>
-        </a>
-    </div>
+<div style="padding-bottom: 60px;">
 
-    <!-- Success Message -->
+    {{-- Alert Success --}}
     @if(session('success'))
-        <div class="alert-success">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>{{ session('success') }}</span>
-        </div>
+    <div class="alert-float" id="successAlert">
+        <i class="fa-solid fa-circle-check" style="font-size:1.2rem"></i>
+        <div>{{ session('success') }}</div>
+    </div>
     @endif
 
-    <!-- Main Card -->
-    <div class="data-card">
-        <!-- Toolbar -->
-        <div class="data-toolbar">
-            <div class="toolbar-left">
-                <a href="{{ route('kategori_sampah.create') }}" class="btn-add">
-                    <i class="fa-solid fa-plus"></i>
-                    <span>Tambah Kategori Sampah</span>
-                </a>
-            </div>
-            
-            <div class="toolbar-right">
-                <form method="GET" action="{{ route('kategori_sampah.index') }}" class="search-form">
-                    <input type="text" 
-                           name="q" 
-                           value="{{ $q }}" 
-                           class="search-input" 
-                           placeholder="Cari nama sampah atau kategori..." 
-                           aria-label="Search">
-                    
-                    <button type="submit" class="btn-search">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <span>Cari</span>
-                    </button>
-                    
-                    @if($q)
-                        <a href="{{ route('kategori_sampah.index') }}" class="btn-reset">
-                            <i class="fa-solid fa-rotate-left"></i>
-                            <span>Reset</span>
-                        </a>
-                    @endif
-                </form>
+    {{-- HEADER --}}
+    <div class="page-header">
+        <div class="page-title">
+            <h1><i class="fa-solid fa-recycle" style="color:var(--brand)"></i> Data Sampah</h1>
+            <p>Atur jenis sampah, harga satuan, dan gambar referensi.</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+            <a href="{{ route('master_kategori_sampah.index') }}" class="btn-action btn-secondary">
+                <i class="fa-solid fa-layer-group"></i> Master Kategori
+            </a>
+            <a href="{{ route('kategori_sampah.create') }}" class="btn-action btn-primary">
+                <i class="fa-solid fa-plus"></i> Tambah Data
+            </a>
+        </div>
+    </div>
+
+    {{-- STATS OVERVIEW --}}
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-box-open"></i></div>
+            <div class="stat-info">
+                <div class="val">{{ $items->total() }}</div>
+                <div class="lbl">Total Item</div>
             </div>
         </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#eff6ff; color:#3b82f6"><i class="fa-solid fa-tag"></i></div>
+            <div class="stat-info">
+                <div class="val">{{ $items->groupBy('master_kategori_id')->count() }}</div>
+                <div class="lbl">Kategori Terpakai</div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Table -->
-        <div class="table-container">
-            <table class="data-table">
+    {{-- MAIN CONTENT --}}
+    <div class="content-card">
+        {{-- Toolbar --}}
+        <div class="toolbar">
+            <div style="font-weight:800; color:var(--ink); font-size:1.1rem;">Daftar Item Sampah</div>
+
+            <form method="GET" action="{{ route('kategori_sampah.index') }}">
+                <div class="search-wrapper">
+                    <input type="text" name="q" value="{{ $q }}" class="search-input" placeholder="Cari nama sampah..." autocomplete="off">
+                    <button type="submit" class="btn-search-icon"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+            </form>
+
+            @if($q)
+                <a href="{{ route('kategori_sampah.index') }}" style="font-size:0.85rem; font-weight:600; color:var(--danger); text-decoration:none;">
+                    <i class="fa-solid fa-xmark"></i> Reset
+                </a>
+            @endif
+        </div>
+
+        {{-- Table --}}
+        <div class="table-responsive">
+            <table>
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Gambar</th>
+                        <th style="width:60px; text-align:center;">#</th>
+                        <th class="col-img">Gambar</th>
                         <th>Nama Sampah</th>
                         <th>Kategori</th>
                         <th>Harga Satuan</th>
                         <th>Satuan</th>
-                        <th>Aksi</th>
+                        <th style="text-align:right;">Aksi</th>
                     </tr>
                 </thead>
-                
                 <tbody>
                     @forelse($items as $item)
                     <tr>
-                        <td class="row-number">
+                        <td style="text-align:center; color:var(--muted);">
                             {{ $loop->iteration + ($items->currentPage()-1) * $items->perPage() }}
                         </td>
-                        
+
                         <td>
-                            <div class="image-thumbnail {{ !$item->gambar_sampah ? 'no-image' : '' }}">
+                            <div class="thumb-wrap">
                                 @if($item->gambar_sampah)
-                                    <img src="{{ asset('storage/'.$item->gambar_sampah) }}" 
-                                         alt="{{ $item->nama_sampah }}"
-                                         loading="lazy">
+                                    <img src="{{ asset('storage/'.$item->gambar_sampah) }}" alt="img" onclick="showPreview(this.src)">
                                 @else
-                                    <i class="fa-solid fa-image"></i>
+                                    <i class="fa-regular fa-image" style="font-size:1.2rem;"></i>
                                 @endif
                             </div>
                         </td>
-                        
+
                         <td>
-                            <div style="font-weight: 600; color: var(--ink); margin-bottom: 4px;">
-                                {{ $item->nama_sampah }}
-                            </div>
+                            <div style="font-weight:700; color:var(--ink);">{{ $item->nama_sampah }}</div>
                             @if($item->deskripsi)
-                            <div style="font-size: 13px; color: var(--muted);">
-                                {{ Str::limit($item->deskripsi, 50) }}
-                            </div>
+                                <div style="font-size:0.8rem; color:var(--muted); margin-top:2px;">{{ Str::limit($item->deskripsi, 40) }}</div>
                             @endif
                         </td>
-                        
+
                         <td>
-                            @if($item->masterKategori)
-                            <div class="category-badge">
-                                <i class="fa-solid fa-tag"></i>
-                                <span>{{ $item->masterKategori->nama_kategori }}</span>
-                            </div>
+                            <span class="badge-cat">
+                                <i class="fa-solid fa-layer-group" style="font-size:0.7rem;"></i>
+                                {{ $item->masterKategori->nama_kategori ?? '-' }}
+                            </span>
+                        </td>
+
+                        <td>
+                            @if($item->harga_satuan)
+                                <span class="price-tag">Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}</span>
                             @else
-                            <span style="color: var(--muted); font-style: italic;">-</span>
+                                <span style="color:var(--muted); font-size:0.85rem;">-</span>
                             @endif
                         </td>
-                        
-                        <td class="price-cell">
-                            @if($item->harga_satuan !== null)
-                                Rp {{ number_format($item->harga_satuan, 0, ',', '.') }}
-                            @else
-                                <span style="color: var(--muted);">-</span>
-                            @endif
-                        </td>
-                        
+
                         <td>
-                            <div class="unit-cell">
-                                @if($item->jenis_satuan)
-                                    <i class="fa-solid fa-weight-scale"></i>
-                                    <span>{{ $item->jenis_satuan }}</span>
-                                @else
-                                    <span style="color: var(--muted);">-</span>
-                                @endif
-                            </div>
+                            <span style="background:var(--bg); padding:4px 8px; border-radius:6px; font-size:0.8rem; border:1px solid var(--line);">
+                                {{ $item->jenis_satuan ?? '-' }}
+                            </span>
                         </td>
-                        
+
                         <td>
-                            <div class="action-buttons">
-                                <a href="{{ route('kategori_sampah.edit', $item->id) }}" class="btn-edit">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                    <span>Edit</span>
+                            <div class="action-group" style="justify-content: flex-end;">
+                                <a href="{{ route('kategori_sampah.edit', $item->id) }}" class="btn-icon btn-edit" title="Edit">
+                                    <i class="fa-solid fa-pen"></i>
                                 </a>
-                                
-                                <form method="POST"
-                                      action="{{ route('kategori_sampah.destroy', $item->id) }}"
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus kategori sampah ini? Gambar dan semua data terkait akan dihapus permanen.')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-delete">
+
+                                <form action="{{ route('kategori_sampah.destroy', $item->id) }}" method="POST"
+                                      onsubmit="return confirmDelete(event, '{{ addslashes($item->nama_sampah) }}')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn-icon btn-del" title="Hapus">
                                         <i class="fa-solid fa-trash"></i>
-                                        <span>Hapus</span>
                                     </button>
                                 </form>
                             </div>
@@ -730,17 +280,9 @@
                     <tr>
                         <td colspan="7">
                             <div class="empty-state">
-                                <div class="empty-icon">
-                                    <i class="fa-solid fa-trash"></i>
-                                </div>
-                                <div class="empty-text">Belum ada data sampah</div>
-                                <div class="empty-subtext">
-                                    @if($q)
-                                        Tidak ditemukan hasil untuk "{{ $q }}". Coba kata kunci lain atau reset pencarian.
-                                    @else
-                                        Tambah data sampah pertama Anda untuk mulai mengelola kategori.
-                                    @endif
-                                </div>
+                                <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+                                <h3 style="font-weight:800; color:var(--ink); margin-bottom:6px;">Data Kosong</h3>
+                                <p style="color:var(--muted); font-size:0.9rem;">Belum ada data sampah. Silakan tambah data baru.</p>
                             </div>
                         </td>
                     </tr>
@@ -749,161 +291,70 @@
             </table>
         </div>
 
-        <!-- Footer -->
-        <div class="table-footer">
-            <div class="pagination-info">
+        {{-- Footer --}}
+        <div class="card-footer">
+            <div style="font-size:0.85rem; color:var(--muted); font-weight:600;">
                 Menampilkan {{ $items->firstItem() ?? 0 }} - {{ $items->lastItem() ?? 0 }} dari {{ $items->total() }} data
             </div>
-            
-            <div class="pagination">
-                {{ $items->links() }}
-            </div>
+            <div>{{ $items->links() }}</div>
         </div>
     </div>
+
 </div>
 @endsection
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add confirmation for delete buttons
-        const deleteForms = document.querySelectorAll('form[action*="destroy"]');
-        deleteForms.forEach(form => {
-            const button = form.querySelector('button[type="submit"]');
-            if (button) {
-                button.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Create custom confirmation modal
-                    const modal = document.createElement('div');
-                    modal.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        right: 0;
-                        bottom: 0;
-                        background: rgba(0,0,0,0.5);
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        z-index: 9999;
-                        padding: 20px;
-                    `;
-                    
-                    modal.innerHTML = `
-                        <div style="background: white; border-radius: var(--radius); padding: 30px; max-width: 400px; width: 100%; box-shadow: var(--shadow-xl);">
-                            <div style="margin-bottom: 20px;">
-                                <div style="width: 60px; height: 60px; border-radius: 50%; background: #fef2f2; display: grid; place-items: center; margin: 0 auto 16px;">
-                                    <i class="fa-solid fa-exclamation-triangle" style="color: #dc2626; font-size: 24px;"></i>
-                                </div>
-                                <div style="font-size: 18px; font-weight: 600; color: var(--ink); text-align: center; margin-bottom: 8px;">
-                                    Hapus Data Sampah
-                                </div>
-                                <div style="font-size: 14px; color: var(--muted); text-align: center;">
-                                    Apakah Anda yakin ingin menghapus kategori sampah ini? Tindakan ini tidak dapat dibatalkan.
-                                </div>
-                            </div>
-                            <div style="display: flex; gap: 12px;">
-                                <button type="button" id="cancelDelete" style="flex: 1; padding: 12px; border: 1px solid var(--line); background: var(--white); color: var(--ink); border-radius: var(--radius-sm); font-weight: 600; cursor: pointer;">
-                                    Batal
-                                </button>
-                                <button type="button" id="confirmDelete" style="flex: 1; padding: 12px; border: 1px solid #dc2626; background: #dc2626; color: white; border-radius: var(--radius-sm); font-weight: 600; cursor: pointer;">
-                                    Hapus
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    
-                    document.body.appendChild(modal);
-                    
-                    // Handle cancel
-                    modal.querySelector('#cancelDelete').addEventListener('click', function() {
-                        document.body.removeChild(modal);
-                    });
-                    
-                    // Handle confirm
-                    modal.querySelector('#confirmDelete').addEventListener('click', function() {
-                        form.submit();
-                    });
-                    
-                    // Close on overlay click
-                    modal.addEventListener('click', function(e) {
-                        if (e.target === modal) {
-                            document.body.removeChild(modal);
-                        }
-                    });
-                });
-            }
-        });
-        
-        // Add image preview on hover
-        const imageThumbnails = document.querySelectorAll('.image-thumbnail img');
-        imageThumbnails.forEach(img => {
-            const originalSrc = img.src;
-            
-            img.addEventListener('mouseenter', function() {
-                // Create preview overlay
-                const preview = document.createElement('div');
-                preview.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0,0,0,0.8);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 10000;
-                    padding: 40px;
-                `;
-                
-                preview.innerHTML = `
-                    <div style="max-width: 500px; max-height: 500px; width: 100%; height: 100%; position: relative;">
-                        <img src="${originalSrc}" style="width: 100%; height: 100%; object-fit: contain; border-radius: var(--radius);">
-                        <button style="position: absolute; top: -20px; right: -20px; width: 40px; height: 40px; border-radius: 50%; background: white; border: none; color: var(--ink); font-size: 18px; cursor: pointer; box-shadow: var(--shadow); display: grid; place-items: center;">
-                            <i class="fa-solid fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                
-                document.body.appendChild(preview);
-                
-                // Close preview
-                const closeBtn = preview.querySelector('button');
-                closeBtn.addEventListener('click', function() {
-                    document.body.removeChild(preview);
-                });
-                
-                preview.addEventListener('click', function(e) {
-                    if (e.target === preview) {
-                        document.body.removeChild(preview);
-                    }
-                });
-            });
-        });
-        
-        // Search input focus
-        const searchInput = document.querySelector('.search-input');
-        if (searchInput) {
-            searchInput.addEventListener('focus', function() {
-                this.parentElement.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.1)';
-            });
-            
-            searchInput.addEventListener('blur', function() {
-                this.parentElement.style.boxShadow = '';
-            });
+    // Auto hide alert
+    setTimeout(() => {
+        const alert = document.getElementById('successAlert');
+        if(alert) {
+            alert.style.transition = "opacity 0.5s, transform 0.5s";
+            alert.style.opacity = '0'; alert.style.transform = 'translateX(100%)';
+            setTimeout(() => alert.remove(), 500);
         }
-        
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => {
-            const successAlert = document.querySelector('.alert-success');
-            if (successAlert) {
-                successAlert.style.transition = 'opacity 0.5s ease';
-                successAlert.style.opacity = '0';
-                setTimeout(() => successAlert.remove(), 500);
-            }
-        }, 5000);
-    });
+    }, 4000);
+
+    // Image Preview Modal
+    function showPreview(src) {
+        const modal = document.createElement('div');
+        modal.style.cssText = `position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:zoom-out;`;
+        modal.innerHTML = `<img src="${src}" style="max-width:90%; max-height:90%; border-radius:12px; box-shadow:0 20px 50px rgba(0,0,0,0.5);">`;
+        modal.onclick = () => modal.remove();
+        document.body.appendChild(modal);
+    }
+
+    // Modern Confirm Delete
+    function confirmDelete(e, name) {
+        e.preventDefault();
+        const modal = document.createElement('div');
+        modal.style.cssText = `position:fixed; inset:0; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadeIn 0.2s ease-out;`;
+
+        modal.innerHTML = `
+            <div style="background:white; border-radius:20px; width:100%; max-width:400px; padding:24px; box-shadow:0 20px 50px rgba(0,0,0,0.2); transform:scale(0.95); animation:popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;">
+                <div style="width:50px; height:50px; background:#fee2e2; border-radius:50%; color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin:0 auto 16px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 style="text-align:center; margin:0 0 8px; color:#0f172a; font-weight:800;">Hapus Data?</h3>
+                <p style="text-align:center; margin:0 0 24px; color:#64748b; font-size:0.9rem; line-height:1.5;">
+                    Anda akan menghapus <b>"${name}"</b>.<br>Data ini akan hilang permanen dari database.
+                </p>
+                <div style="display:flex; gap:12px;">
+                    <button id="btnCancel" style="flex:1; padding:12px; border-radius:12px; border:1px solid #e2e8f0; background:white; color:#0f172a; font-weight:700; cursor:pointer; transition:.2s;">Batal</button>
+                    <button id="btnConfirm" style="flex:1; padding:12px; border-radius:12px; border:none; background:#ef4444; color:white; font-weight:700; cursor:pointer; transition:.2s; box-shadow:0 4px 12px rgba(239,68,68,0.3);">Ya, Hapus</button>
+                </div>
+            </div>
+            <style>
+                @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+                @keyframes popIn { from { transform:scale(0.9); opacity:0; } to { transform:scale(1); opacity:1; } }
+            </style>
+        `;
+
+        document.body.appendChild(modal);
+        modal.querySelector('#btnCancel').onclick = () => modal.remove();
+        modal.querySelector('#btnConfirm').onclick = () => { e.target.submit(); modal.querySelector('#btnConfirm').innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; };
+        modal.onclick = (evt) => { if(evt.target === modal) modal.remove(); };
+        return false;
+    }
 </script>
 @endpush

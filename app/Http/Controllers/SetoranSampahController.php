@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\KategoriSampah;
@@ -25,20 +24,24 @@ class SetoranSampahController extends Controller
             ->orderBy('nama_sampah')
             ->get();
 
-        $groups = $kategori->groupBy(fn($k) => $k->masterKategori?->nama_kategori ?? 'Lainnya');
+        $groups     = $kategori->groupBy(fn($k) => $k->masterKategori?->nama_kategori ?? 'Lainnya');
         $totalCount = $kategori->count();
-        $featured = $kategori->take(6);
+        $featured   = $kategori->take(6);
 
         // pendapatan hanya status selesai, bisa filter tahun
         $qSelesai = SetoranSampah::query()
             ->where('user_id', Auth::id())
             ->where('status', 'selesai');
 
-        if (!empty($tahun)) {
+        if (! empty($tahun)) {
             $qSelesai->whereYear('created_at', $tahun);
         }
 
-        $totalPendapatan = (int) $qSelesai->sum('estimasi_total');
+        $totalPendapatan = (int) (clone $qSelesai)
+            ->when($tahun, function ($q) use ($tahun) {
+                $q->whereYear('created_at', $tahun);
+            })
+            ->sum('estimasi_total');
 
         // pendapatan per tahun (untuk dropdown + list)
         $pendapatanPerTahun = SetoranSampah::query()
@@ -49,7 +52,17 @@ class SetoranSampahController extends Controller
             ->orderBy('tahun', 'desc')
             ->get();
 
-        $daftarTahun = $pendapatanPerTahun->pluck('tahun')->values();
+        $listTahun = SetoranSampah::where('user_id', Auth::id())
+            ->selectRaw('YEAR(created_at) as tahun')
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun');
+
+        // $listTahun = $pendapatanPerTahun->pluck('tahun')->values();
+
+        if ($listTahun->isEmpty()) {
+            $listTahun = collect([date('Y')]);
+        }
 
         // setoran per tahun (count) tetap boleh tampil
         $setoranPerTahun = SetoranSampah::query()
@@ -66,7 +79,7 @@ class SetoranSampahController extends Controller
             'featured',
             'totalPendapatan',
             'pendapatanPerTahun',
-            'daftarTahun',
+            'listTahun',
             'tahun',
             'setoranPerTahun'
         ));
@@ -99,11 +112,11 @@ class SetoranSampahController extends Controller
         // data untuk JS select
         $kategoriData = $kategori->map(function ($k) {
             return [
-                'id' => $k->id,
-                'nama' => $k->nama_sampah,
+                'id'       => $k->id,
+                'nama'     => $k->nama_sampah,
                 'kategori' => $k->masterKategori?->nama_kategori, // ✅ master kategori
-                'harga' => is_numeric($k->harga_satuan) ? (int)$k->harga_satuan : 0,
-                'satuan' => $k->jenis_satuan ?? '',
+                'harga'    => is_numeric($k->harga_satuan) ? (int) $k->harga_satuan : 0,
+                'satuan'   => $k->jenis_satuan ?? '',
             ];
         })->values();
 
@@ -116,19 +129,21 @@ class SetoranSampahController extends Controller
     public function store(Request $request)
     {
         $userId = Auth::id();
-        if (!$userId) return redirect()->route('login');
+        if (! $userId) {
+            return redirect()->route('login');
+        }
 
         $data = $request->validate([
-            'metode' => ['required', 'in:antar,jemput'],
-            'alamat' => ['nullable', 'string', 'max:255'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
-            'jadwal_jemput' => ['nullable', 'date'],
-            'catatan' => ['nullable', 'string'],
+            'metode'                     => ['required', 'in:antar,jemput'],
+            'alamat'                     => ['nullable', 'string', 'max:255'],
+            'latitude'                   => ['nullable', 'numeric'],
+            'longitude'                  => ['nullable', 'numeric'],
+            'jadwal_jemput'              => ['nullable', 'date'],
+            'catatan'                    => ['nullable', 'string'],
 
-            'items' => ['required', 'array', 'min:1'],
+            'items'                      => ['required', 'array', 'min:1'],
             'items.*.kategori_sampah_id' => ['required', 'exists:kategori_sampah,id'],
-            'items.*.jumlah' => ['required', 'numeric', 'min:0.01'],
+            'items.*.jumlah'             => ['required', 'numeric', 'min:0.01'],
         ]);
 
         if ($data['metode'] === 'jemput') {
@@ -143,14 +158,14 @@ class SetoranSampahController extends Controller
         return DB::transaction(function () use ($data, $userId) {
 
             $setoran = SetoranSampah::create([
-                'user_id' => $userId,
-                'metode' => $data['metode'],
-                'alamat' => $data['alamat'] ?? null,
-                'latitude' => $data['latitude'] ?? null,
-                'longitude' => $data['longitude'] ?? null,
-                'jadwal_jemput' => $data['jadwal_jemput'] ?? null,
-                'catatan' => $data['catatan'] ?? null,
-                'status' => 'pending',
+                'user_id'        => $userId,
+                'metode'         => $data['metode'],
+                'alamat'         => $data['alamat'] ?? null,
+                'latitude'       => $data['latitude'] ?? null,
+                'longitude'      => $data['longitude'] ?? null,
+                'jadwal_jemput'  => $data['jadwal_jemput'] ?? null,
+                'catatan'        => $data['catatan'] ?? null,
+                'status'         => 'pending',
                 'estimasi_total' => 0,
             ]);
 
@@ -159,19 +174,19 @@ class SetoranSampahController extends Controller
             foreach ($data['items'] as $row) {
                 $k = KategoriSampah::findOrFail($row['kategori_sampah_id']);
 
-                $harga  = is_numeric($k->harga_satuan) ? (int)$k->harga_satuan : 0;
+                $harga  = is_numeric($k->harga_satuan) ? (int) $k->harga_satuan : 0;
                 $satuan = $k->jenis_satuan ?? null;
 
-                $jumlah   = (float)$row['jumlah'];
+                $jumlah   = (float) $row['jumlah'];
                 $subtotal = (int) round($jumlah * $harga);
 
                 SetoranSampahDetail::create([
-                    'setoran_id' => $setoran->id,
+                    'setoran_id'         => $setoran->id,
                     'kategori_sampah_id' => $k->id,
-                    'jumlah' => $jumlah,
-                    'satuan' => $satuan,
-                    'harga_satuan' => $harga,
-                    'subtotal' => $subtotal,
+                    'jumlah'             => $jumlah,
+                    'satuan'             => $satuan,
+                    'harga_satuan'       => $harga,
+                    'subtotal'           => $subtotal,
                 ]);
 
                 $estimasiTotal += $subtotal;
@@ -206,55 +221,55 @@ class SetoranSampahController extends Controller
             ->findOrFail($id);
 
         return response()->json([
-            'petugas_id' => $setoran->petugas_id,
-            'petugas_name' => optional($setoran->petugas)->name,
-            'petugas_latitude' => $setoran->petugas_latitude ? (float)$setoran->petugas_latitude : null,
-            'petugas_longitude' => $setoran->petugas_longitude ? (float)$setoran->petugas_longitude : null,
+            'petugas_id'        => $setoran->petugas_id,
+            'petugas_name'      => optional($setoran->petugas)->name,
+            'petugas_latitude'  => $setoran->petugas_latitude ? (float) $setoran->petugas_latitude : null,
+            'petugas_longitude' => $setoran->petugas_longitude ? (float) $setoran->petugas_longitude : null,
             'petugas_last_seen' => $setoran->petugas_last_seen ? $setoran->petugas_last_seen->format('Y-m-d H:i:s') : null,
-            'status' => $setoran->status,
+            'status'            => $setoran->status,
         ]);
     }
     public function mapUser()
-{
-    // hanya render halaman peta
-    return view('user.map');
-}
+    {
+        // hanya render halaman peta
+        return view('user.map');
+    }
 
-public function mapUserData()
-{
-    $userId = Auth::id();
+    public function mapUserData()
+    {
+        $userId = Auth::id();
 
-    // ambil semua setoran jemput milik user yang punya koordinat
-    $rows = SetoranSampah::query()
-        ->where('user_id', $userId)
-        ->where('metode', 'jemput')
-        ->whereNotNull('latitude')
-        ->whereNotNull('longitude')
-        ->with('petugas')
-        ->select([
-            'id','status','alamat','latitude','longitude',
-            'petugas_id','petugas_latitude','petugas_longitude','petugas_last_seen',
-            'created_at'
-        ])
-        ->latest()
-        ->get();
+        // ambil semua setoran jemput milik user yang punya koordinat
+        $rows = SetoranSampah::query()
+            ->where('user_id', $userId)
+            ->where('metode', 'jemput')
+            ->whereNotNull('latitude')
+            ->whereNotNull('longitude')
+            ->with('petugas')
+            ->select([
+                'id', 'status', 'alamat', 'latitude', 'longitude',
+                'petugas_id', 'petugas_latitude', 'petugas_longitude', 'petugas_last_seen',
+                'created_at',
+            ])
+            ->latest()
+            ->get();
 
-    return response()->json([
-        'items' => $rows->map(function($s){
-            return [
-                'id' => $s->id,
-                'status' => $s->status,
-                'alamat' => $s->alamat,
-                'lat' => (float)$s->latitude,
-                'lng' => (float)$s->longitude,
-                'created_at' => optional($s->created_at)->toDateTimeString(),
-                'petugas_id' => $s->petugas_id,
-                'petugas_name' => optional($s->petugas)->name,
-                'petugas_lat' => $s->petugas_latitude ? (float)$s->petugas_latitude : null,
-                'petugas_lng' => $s->petugas_longitude ? (float)$s->petugas_longitude : null,
-                'petugas_last_seen' => $s->petugas_last_seen ? $s->petugas_last_seen->format('Y-m-d H:i:s') : null,
-            ];
-        })->values()
-    ]);
-}
+        return response()->json([
+            'items' => $rows->map(function ($s) {
+                return [
+                    'id'                => $s->id,
+                    'status'            => $s->status,
+                    'alamat'            => $s->alamat,
+                    'lat'               => (float) $s->latitude,
+                    'lng'               => (float) $s->longitude,
+                    'created_at'        => optional($s->created_at)->toDateTimeString(),
+                    'petugas_id'        => $s->petugas_id,
+                    'petugas_name'      => optional($s->petugas)->name,
+                    'petugas_lat'       => $s->petugas_latitude ? (float) $s->petugas_latitude : null,
+                    'petugas_lng'       => $s->petugas_longitude ? (float) $s->petugas_longitude : null,
+                    'petugas_last_seen' => $s->petugas_last_seen ? $s->petugas_last_seen->format('Y-m-d H:i:s') : null,
+                ];
+            })->values(),
+        ]);
+    }
 }

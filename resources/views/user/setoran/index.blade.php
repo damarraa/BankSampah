@@ -1,405 +1,549 @@
-@extends('layouts.user') {{-- sesuaikan nama layout user kamu --}}
+@extends('layouts.user')
 @section('title', 'Riwayat Setoran')
 
 @push('styles')
-<style>
-  /* ===== Samakan tema dengan Dashboard (putih + hijau) ===== */
-  :root{
-    --brand:#10b981;
-    --brand-dark:#059669;
-    --brand-soft:#ecfdf5;
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
 
-    --bg:#f9fafb;
-    --card:#ffffff;
-    --ink:#111827;
-    --muted:#6b7280;
-    --line:#e5e7eb;
+    <style>
+        :root {
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --brand-soft: #ecfdf5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --radius: 20px;
+            --radius-sm: 12px;
+        }
 
-    --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --shadow:    0 10px 30px rgba(0,0,0,.08);
-    --radius:16px;
-  }
+        body,
+        .page,
+        .card,
+        table,
+        a,
+        button {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: var(--bg);
+        }
 
-  .page-wrap{
-    width:100%;
-  }
+        .container-fluid {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
 
-  /* container fluid yang sama */
-  .container-fluid{
-    width:100%;
-    max-width:100%;
-    margin:0 auto;
-    padding-left:16px;
-    padding-right:16px;
-  }
-  @media (min-width:768px){
-    .container-fluid{ padding-left:24px; padding-right:24px; }
-  }
+        @media (min-width:768px) {
+            .container-fluid {
+                padding: 0 32px;
+            }
+        }
 
-  /* ===== Header: style sama kayak dashboard ===== */
-  .page-header{
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-    padding: 20px 0 18px;
-    color:#fff;
-    margin-bottom: 14px;
-    position:relative;
-    overflow:hidden;
-  }
-  .page-header::before{
-    content:"";
-    position:absolute;
-    inset:-80px -120px auto auto;
-    width:320px;height:320px;
-    background:rgba(255,255,255,.14);
-    border-radius:999px;
-    transform: rotate(18deg);
-  }
-  .page-header::after{
-    content:"";
-    position:absolute;
-    inset:auto auto -120px -120px;
-    width:260px;height:260px;
-    background:rgba(0,0,0,.08);
-    border-radius:999px;
-  }
-  .header-inner{
-    position:relative;
-    border-radius: var(--radius);
-    padding: 18px 18px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 12px 30px rgba(0,0,0,.10);
-    backdrop-filter: blur(10px);
-  }
-  @media (min-width:768px){
-    .header-inner{ padding: 22px 22px; }
-  }
+        /* ===== HERO HEADER (MATCHING STYLE) ===== */
+        .page-header {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            padding: 40px 0 80px;
+            color: #fff;
+            position: relative;
+            border-radius: 0 0 50px 50px;
+            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+            margin-bottom: -50px;
+            z-index: 1;
+            overflow: hidden;
+        }
 
-  .title{
-    margin:0;
-    font-size: 1.5rem;
-    font-weight: 900;
-    letter-spacing: .2px;
-  }
-  .subtitle{
-    margin:6px 0 0;
-    font-size:.95rem;
-    opacity:.95;
-    max-width: 720px;
-  }
+        .header-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
 
-  /* ===== Top actions ===== */
-  .topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-end;
-    gap:12px;
-    flex-wrap:wrap;
-    margin: 10px 0 12px;
-  }
-  .actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
+        .title {
+            margin: 0;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
 
-  .btnx{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:10px 14px;
-    border-radius:12px;
-    border:1px solid var(--line);
-    background: var(--card);
-    color: var(--ink);
-    text-decoration:none;
-    cursor:pointer;
-    font-size: .875rem;
-    font-weight: 900;
-    box-shadow: var(--shadow-sm);
-    transition: .2s;
-  }
-  .btnx:hover{
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-    border-color: rgba(16,185,129,.45);
-  }
-  .btnx-primary{
-    background: var(--brand);
-    border-color: var(--brand);
-    color:#fff;
-  }
-  .btnx-primary:hover{
-    background: var(--brand-dark);
-    border-color: var(--brand-dark);
-  }
+        .subtitle {
+            margin-top: 8px;
+            opacity: 0.9;
+            font-size: 1rem;
+            font-weight: 500;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-  /* ===== Alert (samakan vibe) ===== */
-  .alertx{
-    margin: 10px 0 14px;
-    padding: 12px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(16,185,129,.28);
-    background: var(--brand-soft);
-    color: #065f46;
-    font-weight: 800;
-    box-shadow: 0 6px 18px rgba(15,23,42,.05);
-  }
+        /* Dekorasi Header */
+        .page-header::before,
+        .page-header::after {
+            content: "";
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            pointer-events: none;
+        }
 
-  /* ===== Card table ===== */
-  .cardx{
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    overflow:hidden;
-  }
+        .page-header::before {
+            width: 300px;
+            height: 300px;
+            top: -100px;
+            left: -50px;
+        }
 
-  .toolbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    flex-wrap:wrap;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--line);
-    background: #fff;
-  }
-  .muted{ color: var(--muted); font-size:.875rem; font-weight:700; }
+        .page-header::after {
+            width: 200px;
+            height: 200px;
+            bottom: -50px;
+            right: -20px;
+            opacity: 0.6;
+        }
 
-  .table-wrap{
-    overflow:auto;
-    max-height: 72vh;
-    background:#fff;
-  }
+        /* ===== MAIN CARD ===== */
+        .card-wrap {
+            position: relative;
+            z-index: 10;
+            margin-top: 10px;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            overflow: hidden;
+        }
 
-  table{
-    width:100%;
-    border-collapse:separate;
-    border-spacing:0;
-  }
+        /* ===== TOOLBAR ===== */
+        .toolbar {
+            padding: 20px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-  thead th{
-    text-align:left;
-    font-size: .75rem;
-    color: var(--muted);
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--line);
-    background: #f3f4f6;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    letter-spacing: .06em;
-    text-transform: uppercase;
-    font-weight: 900;
-    white-space: nowrap;
-  }
+        .toolbar-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--ink);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-  tbody td{
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: top;
-    font-size: .875rem;
-    color: var(--ink);
-  }
+        .btnx {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-decoration: none;
+            transition: 0.2s;
+            cursor: pointer;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+        }
 
-  tbody tr:hover td{
-    background: #fafafa;
-  }
+        .btnx:hover {
+            background: #f8fafc;
+            transform: translateY(-1px);
+        }
 
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    padding: 6px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(16,185,129,.20);
-    background: var(--brand-soft);
-    color: #065f46;
-    font-size: .75rem;
-    font-weight: 900;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    white-space: nowrap;
-  }
+        .btnx-primary {
+            background: var(--brand);
+            color: #fff;
+            border-color: var(--brand);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+        }
 
-  .row-item{
-    margin-bottom:6px;
-  }
-  .row-item .small-muted{
-    color: var(--muted);
-    font-weight: 700;
-  }
+        .btnx-primary:hover {
+            background: var(--brand-dark);
+            transform: translateY(-2px);
+        }
 
-  .cell-actions{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-  }
+        /* ===== TABLE ===== */
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
 
-  .footer{
-    padding: 12px 16px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:10px;
-    border-top: 1px solid var(--line);
-    background:#fff;
-  }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 900px;
+        }
 
-  /* Pagination (laravel default) */
-  .pagination { display:flex; gap:8px; flex-wrap:wrap; margin:0; }
-  .pagination .page-link, .pagination a, .pagination span{
-    color: var(--ink) !important;
-    background: #fff !important;
-    border: 1px solid var(--line) !important;
-    border-radius: 12px;
-    padding: 8px 12px;
-    text-decoration:none;
-    font-weight: 900;
-    box-shadow: 0 2px 10px rgba(15,23,42,.04);
-  }
-  .pagination .active span{
-    background: var(--brand) !important;
-    border-color: var(--brand) !important;
-    color: #fff !important;
-  }
+        thead th {
+            text-align: left;
+            padding: 16px 20px;
+            background: #f8fafc;
+            color: var(--muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--line);
+        }
 
-  .empty{
-    padding: 28px 14px;
-    text-align:center;
-    color: var(--muted);
-    font-weight: 800;
-  }
+        tbody tr {
+            transition: 0.15s;
+            border-bottom: 1px solid var(--line);
+        }
 
-  .nowrap{ white-space: nowrap; }
-</style>
+        tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        tbody td {
+            padding: 16px 20px;
+            vertical-align: middle;
+            color: var(--ink);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Custom Column Styles */
+        .td-id {
+            width: 60px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .td-items ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.85rem;
+        }
+
+        .td-items li {
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .td-items .qty {
+            background: var(--line);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-pending {
+            background: #fff7ed;
+            color: #c2410c;
+            border: 1px solid #ffedd5;
+        }
+
+        .badge-process {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #dbeafe;
+        }
+
+        .badge-success {
+            background: #ecfdf5;
+            color: #047857;
+            border: 1px solid #d1fae5;
+        }
+
+        .badge-cancel {
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fee2e2;
+        }
+
+        .price {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--brand-dark);
+        }
+
+        /* Map Links */
+        .map-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-mini {
+            padding: 6px 10px;
+            border-radius: 8px;
+            background: #fff;
+            border: 1px solid var(--line);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .btn-mini:hover {
+            color: var(--brand);
+            border-color: var(--brand);
+        }
+
+        /* ===== FOOTER PAGINATION ===== */
+        .card-footer {
+            padding: 16px 20px;
+            background: #fff;
+            border-top: 1px solid var(--line);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 6px;
+        }
+
+        .page-link {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--ink);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .page-item.active .page-link {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: #fff;
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 3rem;
+            color: var(--line);
+            margin-bottom: 15px;
+        }
+
+        .empty-text {
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="page-wrap">
+    <div class="page-wrap">
 
-  <!-- HEADER -->
-  <div class="page-header">
-    <div class="container-fluid">
-      <div class="header-inner">
-        <h2 class="title">📦 Riwayat Setoran</h2>
-        <p class="subtitle">Riwayat setoran kamu beserta status, total estimasi, dan detail itemnya.</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="container-fluid">
-    <div class="topbar">
-      <div class="muted">
-        Menampilkan {{ $items->firstItem() ?? 0 }} - {{ $items->lastItem() ?? 0 }} dari {{ $items->total() }} data
-      </div>
-
-      <div class="actions">
-        <a class="btnx" href="{{ route('user.dashboard') }}">🏠 Dashboard</a>
-        <a class="btnx btnx-primary" href="{{ route('user.setoran.create') }}">➕ Buat Setoran</a>
-      </div>
-    </div>
-
-    @if(session('success'))
-      <div class="alertx">
-        ✅ {{ session('success') }}
-      </div>
-    @endif
-
-    <div class="cardx">
-      <div class="toolbar">
-        <div class="muted">
-          Menampilkan {{ $items->firstItem() ?? 0 }} - {{ $items->lastItem() ?? 0 }} dari {{ $items->total() }} data
+        {{-- MODERN HEADER --}}
+        <div class="page-header">
+            <div class="container-fluid">
+                <div class="header-content">
+                    <h2 class="title">Riwayat Setoran</h2>
+                    <p class="subtitle">Pantau status penjemputan dan estimasi pendapatan dari sampah yang kamu setor.</p>
+                </div>
+            </div>
         </div>
-        <div></div>
-      </div>
 
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th class="nowrap">#</th>
-              <th>Item</th>
-              <th class="nowrap">Metode</th>
-              <th class="nowrap">Total</th>
-              <th class="nowrap">Status</th>
-              <th>Lokasi</th>
-              <th class="nowrap">Aksi</th>
-            </tr>
-          </thead>
+        <div class="container-fluid">
 
-          <tbody>
-            @forelse($items as $it)
-              <tr>
-                <td class="nowrap">
-                  {{ $loop->iteration + ($items->currentPage()-1)*$items->perPage() }}
-                </td>
+            {{-- SUCCESS ALERT --}}
+            @if (session('success'))
+                <div
+                    style="background: #ecfdf5; border: 1px solid #10b981; color: #065f46; padding: 15px; border-radius: 12px; margin-bottom: 20px; display:flex; align-items:center; gap:10px; font-weight:700; box-shadow: 0 4px 12px rgba(16,185,129,0.1);">
+                    <i class="fa-solid fa-check-circle"></i> {{ session('success') }}
+                </div>
+            @endif
 
-                <td>
-                  @forelse($it->items as $d)
-                    <div class="row-item">
-                      - {{ $d->kategori->nama_sampah ?? '-' }}
-                      <span class="small-muted">
-                        ({{ $d->kategori->masterKategori->nama_kategori ?? '-' }})
-                      </span>
-                      : {{ $d->jumlah }} {{ $d->satuan ?? '' }}
-                      <span class="small-muted">(Rp {{ number_format($d->subtotal) }})</span>
+            {{-- TABLE CARD --}}
+            <div class="card-wrap">
+                <div class="toolbar">
+                    <div class="toolbar-title">
+                        <i class="fa-solid fa-clock-rotate-left" style="color:var(--muted)"></i> Data Transaksi
                     </div>
-                  @empty
-                    <span class="muted">-</span>
-                  @endforelse
-                </td>
-
-                <td class="nowrap">
-                  <span class="pill">{{ strtoupper($it->metode) }}</span>
-                </td>
-
-                <td class="nowrap">
-                  Rp {{ number_format($it->estimasi_total) }}
-                </td>
-
-                <td class="nowrap">
-                  <span class="pill">{{ strtoupper($it->status) }}</span>
-                </td>
-
-                <td>
-                  @if($it->metode === 'jemput' && $it->latitude && $it->longitude)
-                    <div class="cell-actions">
-                      <a class="btnx" target="_blank"
-                         href="https://www.google.com/maps?q={{ $it->latitude }},{{ $it->longitude }}">
-                        🗺️ Lihat Map
-                      </a>
-                      <a class="btnx" target="_blank"
-                         href="https://www.google.com/maps/dir/?api=1&destination={{ $it->latitude }},{{ $it->longitude }}&travelmode=driving">
-                        🚗 Navigasi
-                      </a>
+                    <div style="display:flex; gap:10px;">
+                        <a href="{{ route('user.dashboard') }}" class="btnx">
+                            <i class="fa-solid fa-house"></i> Dashboard
+                        </a>
+                        <a href="{{ route('user.setoran.create') }}" class="btnx btnx-primary">
+                            <i class="fa-solid fa-plus"></i> Setor Sampah
+                        </a>
                     </div>
-                  @else
-                    <span class="muted">-</span>
-                  @endif
-                </td>
+                </div>
 
-                <td class="nowrap">
-                  <a class="btnx btnx-primary" href="{{ route('user.setoran.show', $it->id) }}">Detail</a>
-                </td>
-              </tr>
-            @empty
-              <tr>
-                <td colspan="7" class="empty">Belum ada setoran.</td>
-              </tr>
-            @endforelse
-          </tbody>
-        </table>
-      </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="td-id">#</th>
+                                <th>Tanggal & Metode</th>
+                                <th style="width:30%">Item Sampah</th>
+                                <th>Total Estimasi</th>
+                                <th>Status</th>
+                                <th>Lokasi Penjemputan</th>
+                                <th style="text-align:right">Opsi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($items as $it)
+                                <tr>
+                                    <td class="td-id">
+                                        {{ $loop->iteration + ($items->currentPage() - 1) * $items->perPage() }}
+                                    </td>
 
-      <div class="footer">
-        <div class="muted">
-          Menampilkan {{ $items->firstItem() ?? 0 }} - {{ $items->lastItem() ?? 0 }} dari {{ $items->total() }} data
+                                    <td>
+                                        <div style="font-weight:800; color:var(--ink)">
+                                            {{ \Carbon\Carbon::parse($it->created_at)->format('d M Y') }}
+                                        </div>
+                                        <div style="font-size:0.8rem; color:var(--muted); margin-top:4px;">
+                                            @if ($it->metode == 'jemput')
+                                                <i class="fa-solid fa-truck-fast"></i> Jemput
+                                            @else
+                                                <i class="fa-solid fa-person-walking-luggage"></i> Antar
+                                            @endif
+                                        </div>
+                                    </td>
+
+                                    <td class="td-items">
+                                        @if ($it->items->count() > 0)
+                                            <ul>
+                                                @foreach ($it->items->take(3) as $d)
+                                                    <li>
+                                                        <span class="qty">{{ $d->jumlah }}
+                                                            {{ $d->satuan ?? 'kg' }}</span>
+                                                        {{ $d->kategori->nama_sampah ?? 'Item dihapus' }}
+                                                    </li>
+                                                @endforeach
+                                                @if ($it->items->count() > 3)
+                                                    <li style="color:var(--brand); font-size:0.75rem;">
+                                                        +{{ $it->items->count() - 3 }} item lainnya...</li>
+                                                @endif
+                                            </ul>
+                                        @else
+                                            <span class="muted">-</span>
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        <span class="price">Rp {{ number_format($it->estimasi_total, 0, ',', '.') }}</span>
+                                    </td>
+
+                                    <td>
+                                        @php
+                                            $badges = [
+                                                'menunggu' => ['class' => 'badge-pending', 'icon' => 'fa-clock'],
+                                                'proses' => [
+                                                    'class' => 'badge-process',
+                                                    'icon' => 'fa-spinner fa-spin',
+                                                ],
+                                                'selesai' => ['class' => 'badge-success', 'icon' => 'fa-check-circle'],
+                                                'batal' => ['class' => 'badge-cancel', 'icon' => 'fa-times-circle'],
+                                                ];
+                                            $status = strtolower($it->status);
+                                            $b = $badges[$status] ?? [
+                                                'class' => 'badge-pending',
+                                                'icon' => 'fa-circle-question',
+                                            ];
+                                        @endphp
+                                        <span class="badge {{ $b['class'] }}">
+                                            <i class="fa-solid {{ $b['icon'] }}"></i> {{ $it->status }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        @if ($it->metode === 'jemput' && $it->latitude)
+                                            <div class="map-links">
+                                                <a href="https://www.google.com/maps/search/?api=1&query={{ $it->latitude }},{{ $it->longitude }}"
+                                                    target="_blank" class="btn-mini" title="Lihat Peta">
+                                                    <i class="fa-solid fa-map-location-dot"></i> Peta
+                                                </a>
+                                                <a href="https://www.google.com/maps/dir/?api=1&destination={{ $it->latitude }},{{ $it->longitude }}"
+                                                    target="_blank" class="btn-mini" title="Navigasi">
+                                                    <i class="fa-solid fa-location-arrow"></i> Rute
+                                                </a>
+                                            </div>
+                                        @else
+                                            <span class="muted" style="font-size:0.8rem; font-style:italic;">
+                                                @if ($it->metode == 'antar')
+                                                    - (Diantar ke gudang)
+                                                @else
+                                                    Lokasi tidak ada
+                                                @endif
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                    <td style="text-align:right">
+                                        <a href="{{ route('user.setoran.show', $it->id) }}" class="btnx"
+                                            style="padding:6px 12px; font-size:0.8rem;">
+                                            Detail <i class="fa-solid fa-chevron-right"
+                                                style="font-size:0.7rem; margin-left:4px;"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7">
+                                        <div class="empty-state">
+                                            <div class="empty-icon"><i class="fa-regular fa-folder-open"></i></div>
+                                            <div class="empty-text">Belum ada riwayat setoran sampah.</div>
+                                            <a href="{{ route('user.setoran.create') }}" class="btnx btnx-primary">Mulai
+                                                Setor Sekarang</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- FOOTER / PAGINATION --}}
+                <div class="card-footer">
+                    <div style="font-size:0.85rem; color:var(--muted); font-weight:600;">
+                        Menampilkan {{ $items->firstItem() ?? 0 }} - {{ $items->lastItem() ?? 0 }} dari
+                        {{ $items->total() }} data
+                    </div>
+                    <div>
+                        {{ $items->links() }}
+                    </div>
+                </div>
+            </div>
         </div>
-        <div>{{ $items->links() }}</div>
-      </div>
     </div>
-  </div>
-</div>
 @endsection

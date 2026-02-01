@@ -1,5 +1,4 @@
 @extends('layouts.user')
-
 @section('title', 'Dashboard')
 
 @php
@@ -10,418 +9,170 @@
   });
 
   $totalCount = $kategori->count();
+  $totalSetoran = (int) $setoranPerTahun->sum('total'); // Total transaksi tahun ini
 
-  $totalSetoran = (int) $setoranPerTahun->sum('total');
-
-  $totalPendapatanTahun = (int) ($tahun
+  // Total Pendapatan (jika ada filter tahun, pakai data filter, jika tidak total semua)
+  $totalPendapatanDisplay = $tahun
     ? optional($pendapatanPerTahun->firstWhere('tahun', $tahun))->total
-    : $totalPendapatan
-  );
+    : $totalPendapatan;
 @endphp
 
 @push('styles')
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+
 <style>
   :root{
-    --brand:#10b981;
-    --brand-dark:#059669;
-    --bg:#f9fafb;
-    --line:#e5e7eb;
-    --ink:#111827;
-    --muted:#6b7280;
-    --shadow: 0 10px 30px rgba(0,0,0,.08);
-    --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --radius: 16px;
+    --brand: #10b981;
+    --brand-dark: #059669;
+    --brand-soft: #ecfdf5;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --radius: 20px;
   }
 
-  /* ==== DASHBOARD STYLES ==== */
-  .dashboard-container { width: 100%; }
+  body, .dashboard-container { font-family: "Plus Jakarta Sans", sans-serif; background-color: var(--bg); }
 
-  /* container full */
-  .container-fluid {
-    width: 100%;
-    max-width: 100%;
-    margin: 0 auto;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  @media (min-width: 768px) {
-    .container-fluid { padding-left: 24px; padding-right: 24px; }
-  }
+  .container-fluid { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+  @media (min-width: 768px) { .container-fluid { padding: 0 32px; } }
 
-  /* HEADER SECTION (lebih cantik + radius) */
-  .dashboard-header{
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-    padding: 22px 0 18px;
+  /* ===== HERO HEADER (CONSISTENT STYLE) ===== */
+  .dashboard-header {
+    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+    padding: 40px 0 90px; /* Extra padding bawah untuk overlap */
     color: #fff;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-  .dashboard-header::before{
-    content:"";
-    position:absolute;
-    inset:-80px -120px auto auto;
-    width: 320px;
-    height: 320px;
-    background: rgba(255,255,255,.14);
-    filter: blur(2px);
-    border-radius: 999px;
-    transform: rotate(18deg);
-  }
-  .dashboard-header::after{
-    content:"";
-    position:absolute;
-    inset:auto auto -120px -120px;
-    width: 260px;
-    height: 260px;
-    background: rgba(0,0,0,.08);
-    border-radius: 999px;
-    filter: blur(1px);
+    border-radius: 0 0 50px 50px;
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+    margin-bottom: -60px;
+    position: relative; overflow: hidden; z-index: 1;
   }
 
-  .hero-inner{
-    position: relative;
-    border-radius: var(--radius);
-    padding: 18px 18px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 12px 30px rgba(0,0,0,.10);
-    backdrop-filter: blur(10px);
+  /* Dekorasi Header */
+  .dashboard-header::before, .dashboard-header::after {
+    content: ""; position: absolute; border-radius: 50%;
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); pointer-events: none;
   }
-  @media (min-width: 768px){
-    .hero-inner{ padding: 22px 22px; }
-  }
+  .dashboard-header::before { width: 300px; height: 300px; top: -100px; left: -50px; }
+  .dashboard-header::after { width: 200px; height: 200px; bottom: -50px; right: -20px; opacity: 0.6; }
 
-  .welcome-title { font-size: 1.75rem; font-weight: 800; margin-bottom: 8px; }
-  .welcome-subtitle { font-size: .95rem; opacity: .95; max-width: 720px; margin-bottom: 0; }
+  .hero-content { position: relative; z-index: 2; text-align: center; }
+  .welcome-title { font-size: 1.8rem; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.5px; }
+  .welcome-subtitle { font-size: 1rem; opacity: 0.95; font-weight: 500; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
-  /* ===== Top Controls ===== */
-  .top-row{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 14px 0 12px;
+  /* ===== STATS SECTION (OVERLAP) ===== */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px;
+    position: relative; z-index: 10; margin-bottom: 30px;
   }
-  .top-left{
-    display:flex;
-    align-items:center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-  .pill{
-    display:inline-flex;
-    align-items:center;
-    gap: 8px;
-    padding: 6px 12px;
-    border-radius: 999px;
-    background: #fff;
-    border: 1px solid #eef2f7;
-    box-shadow: var(--shadow-sm);
-    color: #0f172a;
-    font-weight: 700;
-    font-size: .875rem;
-  }
-  .pill small{ font-weight: 700; color: var(--muted); }
+  @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
 
-  .year-select{
-    appearance: none;
-    border: 1px solid #e5e7eb;
-    background: #fff;
-    border-radius: 12px;
-    padding: 10px 12px;
-    min-width: 180px;
-    font-weight: 700;
-    color: #111827;
-    box-shadow: var(--shadow-sm);
-    cursor: pointer;
-    outline: none;
+  .stat-card {
+    background: #fff; border-radius: var(--radius); padding: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.8);
+    display: flex; align-items: center; gap: 16px; transition: transform 0.2s;
   }
-  .year-select:focus{
-    border-color: var(--brand);
-    box-shadow: 0 0 0 3px rgba(16,185,129,.16);
-  }
+  .stat-card:hover { transform: translateY(-3px); }
 
-  /* ======= STATS CARDS: HORIZONTAL STRIP (1 ROW) ======= */
-  .stats-strip {
-    display: flex;
-    gap: 16px;
-    flex-wrap: nowrap;           /* jangan turun */
-    overflow-x: auto;            /* scroll ke samping kalau sempit */
-    padding: 2px 2px 10px;
-    margin-bottom: 14px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-  }
-  .stats-strip::-webkit-scrollbar { height: 8px; }
-  .stats-strip::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 999px; }
-
-  .stat-compact {
-    scroll-snap-align: start;
-    flex: 0 0 290px;
-    background: #fff;
-    border: 1px solid #eef2f7;
-    border-radius: 14px;
-    box-shadow: var(--shadow-sm);
-    padding: 14px 14px;
-    position: relative;
-    overflow: hidden;
-    min-height: 86px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  @media (min-width: 1200px) {
-    .stat-compact { flex: 1 1 0; min-width: 240px; }
-  }
-  .stat-compact::before{
-    content:"";
-    position:absolute;
-    left:0; top:0;
-    width: 5px; height: 100%;
-    background: var(--accent, var(--brand));
-  }
-
-  .stat-left { min-width: 0; }
-  .stat-label {
-    font-size: .72rem;
-    letter-spacing: .08em;
-    font-weight: 900;
-    color: var(--accent, var(--brand));
-    text-transform: uppercase;
-    margin-bottom: 6px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 210px;
-  }
-  .stat-value {
-    font-size: 1.35rem;
-    font-weight: 900;
-    color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 220px;
-  }
-  .stat-sub {
-    font-size: .8rem;
-    color: var(--muted);
-    margin-top: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 220px;
-  }
-
-  .stat-icon-wrap{
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: #f3f4f6;
-    color: #94a3b8;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex: 0 0 auto;
-  }
-  .stat-icon-wrap i{ font-size: 1.25rem; opacity:.95; }
-
-  .accent-blue  { --accent: #3b82f6; }
-  .accent-green { --accent: #10b981; }
-  .accent-teal  { --accent: #06b6d4; }
-  .accent-amber { --accent: #f59e0b; }
-
-  /* ===== FILTER TABS (katalog) ===== */
-  .filter-tabs {
-    display: flex;
-    gap: 8px;
-    overflow-x: auto;
-    padding: 4px 0;
-    -webkit-overflow-scrolling: touch;
-    margin: 6px 0 10px;
-  }
-  .filter-tab {
+  .stat-icon {
+    width: 56px; height: 56px; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
     flex-shrink: 0;
-    padding: 8px 14px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 999px;
-    font-size: .875rem;
-    font-weight: 800;
-    color: #6b7280;
-    cursor: pointer;
-    transition: .2s;
-    white-space: nowrap;
-    box-shadow: 0 2px 8px rgba(0,0,0,.04);
   }
-  .filter-tab:hover { border-color: var(--brand); color: var(--brand-dark); }
-  .filter-tab.active { background: var(--brand); border-color: var(--brand); color: #fff; }
-  .tab-count {
-    background: rgba(255,255,255,.22);
-    padding: 2px 7px;
-    border-radius: 999px;
-    font-size: .75rem;
-    font-weight: 900;
-    margin-left: 6px;
-  }
+  .icon-green { background: #ecfdf5; color: #10b981; }
+  .icon-blue { background: #eff6ff; color: #3b82f6; }
+  .icon-amber { background: #fffbeb; color: #f59e0b; }
 
-  .catalog-head{
-    display:flex;
-    align-items:flex-end;
-    justify-content:space-between;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin: 10px 0 12px;
-  }
-  .section-title { font-size: 1.25rem; font-weight: 900; color: #1f2937; margin: 0; }
-  .section-subtitle { font-size: .875rem; color: #6b7280; margin: 4px 0 0; }
-  .info-text { font-size: .875rem; color: #6b7280; font-weight: 700; }
+  .stat-info h4 { margin: 0 0 4px; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .stat-info .value { font-size: 1.4rem; font-weight: 900; color: var(--ink); line-height: 1; }
+  .stat-info .sub { font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 4px; }
 
-  /* PRODUCTS GRID */
-  .products-grid{
-    display:grid;
-    grid-template-columns: repeat(1, 1fr);
-    gap: 16px;
-    margin-bottom: 36px;
+  /* ===== FILTERS & CATALOG ===== */
+  .section-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
+  }
+  .section-title { font-size: 1.25rem; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+
+  /* Scrollable Filter Tabs */
+  .filter-wrapper {
+    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch; scrollbar-width: none; /* Hide scrollbar Firefox */
+  }
+  .filter-wrapper::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+
+  .filter-btn {
+    padding: 8px 16px; background: #fff; border: 1px solid var(--line); border-radius: 50px;
+    font-size: 0.85rem; font-weight: 700; color: var(--muted); white-space: nowrap; cursor: pointer; transition: 0.2s;
+  }
+  .filter-btn:hover { border-color: var(--brand); color: var(--brand-dark); }
+  .filter-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+  .filter-count {
+    font-size: 0.7rem; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; margin-left: 6px;
+  }
+  .filter-btn.active .filter-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+  /* ===== PRODUCT GRID ===== */
+  .products-grid {
+    display: grid; grid-template-columns: repeat(1, 1fr); gap: 20px; padding-bottom: 60px;
   }
   @media (min-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 768px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1024px){ .products-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 900px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1200px) { .products-grid { grid-template-columns: repeat(4, 1fr); } }
 
-  .product-card{
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius: 16px;
-    overflow:hidden; /* penting biar gambar ikut rounded */
-    transition:.2s;
-    display:flex;
-    flex-direction:column;
-    height:100%;
+  .product-card {
+    background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
+    transition: 0.2s; display: flex; flex-direction: column; height: 100%;
   }
-  .product-card:hover{
-    box-shadow: var(--shadow);
-    transform: translateY(-2px);
-    border-color: var(--brand);
-  }
+  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); border-color: var(--brand-soft); }
 
-  /* ====== GAMBAR FULL LEBAR CARD ====== */
-  .product-image{
-    position: relative;
-    width: 100%;
-    aspect-ratio: 16 / 9;     /* konsisten tinggi mengikuti lebar */
-    background: #f3f4f6;
-    border-bottom: 1px solid #e5e7eb;
-    overflow: hidden;
+  .product-img-wrap {
+    position: relative; width: 100%; aspect-ratio: 4/3; background: #f1f5f9; overflow: hidden;
   }
-  .product-image img{
-    position:absolute;
-    inset:0;
-    width:100%;
-    height:100%;
-    display:block;
-    object-fit: cover;        /* FULL memenuhi area */
-    object-position: center;  /* fokus tengah */
-  }
-  .no-image{
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:#9ca3af;
-    font-size:.9rem;
-    font-weight:800;
+  .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+  .product-card:hover .product-img-wrap img { transform: scale(1.05); }
+
+  .badge-cat {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
+    padding: 4px 10px; border-radius: 8px;
+    font-size: 0.7rem; font-weight: 800; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
 
-  .product-info{
-    padding: 16px;
-    display:flex;
-    flex-direction:column;
-    flex:1;
-  }
-  .product-badge{
-    display:inline-flex;
-    align-items:center;
-    gap:6px;
-    padding: 5px 10px;
-    border-radius: 999px;
-    font-size: .75rem;
-    font-weight: 900;
-    color: #059669;
-    background: #ecfdf5;
-    border: 1px solid rgba(16,185,129,.18);
-    width: fit-content;
-    margin-bottom: 10px;
-  }
-  .product-title{
-    font-size: 1rem;
-    font-weight: 900;
-    color:#1f2937;
-    margin: 0 0 8px;
-    line-height:1.3;
-  }
-  .product-description{
-    font-size: .875rem;
-    color:#6b7280;
-    line-height:1.5;
-    margin-bottom: 12px;
-    flex:1;
-  }
+  .product-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
+  .p-title { font-size: 1rem; font-weight: 800; color: var(--ink); margin: 0 0 6px; line-height: 1.3; }
+  .p-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; line-height: 1.5; flex: 1; }
 
-  .price-label{ font-size:.75rem; color:#6b7280; margin-bottom: 4px; font-weight:700; }
-  .price-value{ font-size: 1.1rem; font-weight: 900; color:#059669; }
-  .price-unit{ font-size:.75rem; color:#6b7280; margin-left:4px; font-weight:700; }
+  .p-price-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
+  .p-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 2px; }
+  .p-value { font-size: 1.1rem; font-weight: 900; color: var(--brand-dark); }
+  .p-unit { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
 
-  .add-button{
-    width:100%;
-    background: var(--brand);
-    color:#fff;
-    border:none;
-    border-radius: 12px;
-    padding: 10px;
-    font-size: .875rem;
-    font-weight: 900;
-    cursor:pointer;
-    transition:.2s;
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap: 8px;
-    text-decoration:none;
-    margin-top: 12px;
+  .btn-add {
+    margin-top: 14px; width: 100%; padding: 10px; border-radius: 10px; border: none;
+    background: var(--brand-soft); color: var(--brand-dark); font-weight: 800; font-size: 0.85rem;
+    cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
   }
-  .add-button:hover{ background: var(--brand-dark); }
+  .btn-add:hover { background: var(--brand); color: #fff; }
 
-  /* EMPTY */
-  .empty-state{
-    text-align:center;
-    padding: 40px 20px;
-    background:#fff;
-    border:1px solid #e5e7eb;
-    border-radius: 16px;
-    box-shadow: var(--shadow-sm);
-    grid-column: 1 / -1;
-  }
-  .empty-state-icon{ font-size: 3rem; margin-bottom: 16px; color:#9ca3af; }
-  .empty-state-title{ font-size: 1.25rem; font-weight: 900; color:#1f2937; margin-bottom: 8px; }
-  .empty-state-message{ color:#6b7280; max-width: 420px; margin: 0 auto; font-size:.875rem; font-weight: 700; }
+  /* Empty State */
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff; border-radius: 16px; border: 1px dashed var(--line); }
+  .empty-icon { font-size: 3rem; color: var(--line); margin-bottom: 15px; }
 </style>
 @endpush
 
 @section('content')
 <div class="dashboard-container">
 
-  <!-- HEADER -->
   <div class="dashboard-header">
     <div class="container-fluid">
-      <div class="hero-inner">
-        <h1 class="welcome-title">🌱 Selamat Datang di SampahKu</h1>
+      <div class="hero-content">
+        <h1 class="welcome-title">👋 Halo, {{ Auth::user()->name ?? 'User' }}!</h1>
         <p class="welcome-subtitle">
-          Kelola sampah Anda dengan mudah melalui sistem yang terintegrasi.
-          Pantau pendapatan, setor sampah, dan lihat katalog item yang tersedia.
+          Selamat datang di dashboard SampahKu. Kelola sampah, pantau pendapatan, dan jaga lingkungan bersama-sama.
         </p>
       </div>
     </div>
@@ -429,28 +180,63 @@
 
   <div class="container-fluid">
 
-  
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon icon-green"><i class="fa-solid fa-wallet"></i></div>
+        <div class="stat-info">
+          <h4>Pendapatan Anda</h4>
+          <div class="value">Rp {{ number_format($totalPendapatanDisplay, 0, ',', '.') }}</div>
+          <div class="sub">
+            @if($tahun) Tahun {{ $tahun }} @else Semua Waktu @endif
+          </div>
+        </div>
+      </div>
 
-    <!-- FILTER TABS -->
-  
+      <div class="stat-card">
+        <div class="stat-icon icon-blue"><i class="fa-solid fa-receipt"></i></div>
+        <div class="stat-info">
+          <h4>Total Transaksi</h4>
+          <div class="value">{{ number_format($totalSetoran) }}</div>
+          <div class="sub">Kali setoran berhasil</div>
+        </div>
+      </div>
 
-    <!-- CATALOG HEADER + INFO -->
-    <div class="catalog-head" id="productsHeader">
-     
-       <div class="filter-tabs" id="filterTabs">
-      <button class="filter-tab active" data-filter="__all__" data-label="Semua">
-        Semua Item <span class="tab-count">{{ $totalCount }}</span>
-      </button>
-      @foreach($groups as $gName => $list)
-        @php $gKey = Str::slug($gName); @endphp
-        <button class="filter-tab" data-filter="{{ $gKey }}" data-label="{{ $gName }}">
-          {{ $gName }} <span class="tab-count">{{ $list->count() }}</span>
+      <div class="stat-card" style="background: #f8fafc; border: 2px dashed #cbd5e1; justify-content: center;">
+        <form action="{{ route('user.dashboard') }}" method="GET" style="width: 100%;">
+          <div style="display:flex; gap:10px; align-items:center; justify-content: space-between;">
+            <div style="font-weight:700; color:var(--muted); font-size:0.9rem;">
+              <i class="fa-solid fa-calendar-days"></i> Filter Tahun
+            </div>
+            <select name="tahun" onchange="this.form.submit()"
+              style="width:auto; padding: 8px 12px; border-radius: 8px; font-size:0.85rem; border-color:#cbd5e1;">
+              <option value="">Semua</option>
+              @foreach($listTahun as $t)
+                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}</option>
+              @endforeach
+            </select>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <div class="section-title">
+        <i class="fa-solid fa-recycle" style="color:var(--brand)"></i> Katalog Sampah
+      </div>
+
+      <div class="filter-wrapper" id="filterTabs">
+        <button class="filter-btn active" data-filter="__all__">
+          Semua <span class="filter-count">{{ $totalCount }}</span>
         </button>
-      @endforeach
-    </div>
+        @foreach($groups as $gName => $list)
+          @php $gKey = Str::slug($gName); @endphp
+          <button class="filter-btn" data-filter="{{ $gKey }}">
+            {{ $gName }} <span class="filter-count">{{ $list->count() }}</span>
+          </button>
+        @endforeach
+      </div>
     </div>
 
-    <!-- PRODUCTS GRID -->
     <div class="products-grid" id="productsGrid">
       @forelse($kategori as $k)
         @php
@@ -458,103 +244,78 @@
           $gKey  = Str::slug($gName);
         @endphp
 
-        <div class="product-card" data-group="{{ $gKey }}" data-name="{{ Str::lower($k->nama_sampah) }}">
-          <div class="product-image">
+        <div class="product-card" data-group="{{ $gKey }}">
+          <div class="product-img-wrap">
+            <span class="badge-cat">{{ $gName }}</span>
             @if(!empty($k->gambar_sampah))
               <img src="{{ asset('storage/'.$k->gambar_sampah) }}" alt="{{ $k->nama_sampah }}">
             @else
-              <div class="no-image">🖼️ Tidak ada gambar</div>
+              <div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700;">
+                <i class="fa-regular fa-image" style="font-size:2rem; margin-right:8px;"></i> No Image
+              </div>
             @endif
           </div>
 
-          <div class="product-info">
-            <span class="product-badge">📁 {{ $gName }}</span>
-
-            <h3 class="product-title">{{ $k->nama_sampah }}</h3>
-
-            <p class="product-description">
-              {{ $k->deskripsi ? Str::limit($k->deskripsi, 80) : 'Tidak ada deskripsi.' }}
+          <div class="product-body">
+            <h3 class="p-title">{{ $k->nama_sampah }}</h3>
+            <p class="p-desc">
+              {{ $k->deskripsi ? Str::limit($k->deskripsi, 60) : 'Tidak ada deskripsi tersedia.' }}
             </p>
 
-            <div class="product-price">
-              <div class="price-label">Harga Satuan</div>
+            <div class="p-price-row">
               <div>
-                <span class="price-value">
-                  {{ $k->harga_satuan !== null ? 'Rp ' . number_format($k->harga_satuan, 0, ',', '.') : 'Rp 0' }}
+                <span class="p-label">Estimasi Harga</span>
+                <span class="p-value">
+                  {{ $k->harga_satuan ? 'Rp ' . number_format($k->harga_satuan, 0, ',', '.') : 'Gratis' }}
                 </span>
-                <span class="price-unit">/ {{ $k->jenis_satuan ?? 'unit' }}</span>
+                <span class="p-unit">/ {{ $k->jenis_satuan ?? 'kg' }}</span>
               </div>
             </div>
 
-            <a href="{{ route('user.setoran.create', ['kategori_sampah_id' => $k->id]) }}" class="add-button">
-              <span>Tambah Setoran</span>
-              <i class="bi bi-plus-lg"></i>
+            <a href="{{ route('user.setoran.create', ['kategori_sampah_id' => $k->id]) }}" class="btn-add">
+              <i class="fa-solid fa-plus"></i> Tambah ke Setoran
             </a>
           </div>
         </div>
       @empty
         <div class="empty-state">
-          <div class="empty-state-icon">📦</div>
-          <h3 class="empty-state-title">Belum ada data sampah</h3>
-          <p class="empty-state-message">Admin belum menambahkan data sampah ke dalam sistem.</p>
+          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+          <h3 style="font-weight:800; color:var(--ink); margin-bottom:8px;">Belum ada data sampah</h3>
+          <p style="color:var(--muted);">Admin belum menambahkan kategori sampah saat ini.</p>
         </div>
       @endforelse
     </div>
+
   </div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const filterTabs  = document.querySelectorAll('.filter-tab');
-    const cards       = document.querySelectorAll('.product-card');
-    const resultInfo  = document.getElementById('resultInfo');
-    const headerEl    = document.getElementById('productsHeader');
+  document.addEventListener('DOMContentLoaded', () => {
+    const tabs = document.querySelectorAll('.filter-btn');
+    const cards = document.querySelectorAll('.product-card');
 
-    let activeFilter = '__all__';
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Active State
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
 
-    function applyFilter() {
-      let visibleCount = 0;
-      const visibleGroups = new Set();
+        const filterVal = tab.dataset.filter;
 
-      cards.forEach(card => {
-        const g = card.dataset.group || '';
-        const show = (activeFilter === '__all__') || (g === activeFilter);
-
-        card.style.display = show ? '' : 'none';
-
-        if (show) {
-          visibleCount++;
-          visibleGroups.add(g);
-        }
-      });
-
-      if (resultInfo) {
-        if (activeFilter === '__all__') {
-          resultInfo.textContent = `Menampilkan ${visibleCount} item dari ${visibleGroups.size} kategori`;
-        } else {
-          const activeTab = document.querySelector(`.filter-tab[data-filter="${activeFilter}"]`);
-          const label = activeTab ? activeTab.dataset.label : 'Kategori';
-          resultInfo.textContent = `Menampilkan ${visibleCount} item untuk kategori: ${label}`;
-        }
-      }
-    }
-
-    filterTabs.forEach(tab => {
-      tab.addEventListener('click', function() {
-        activeFilter = this.dataset.filter || '__all__';
-
-        filterTabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-
-        applyFilter();
-
-        if (headerEl) headerEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Filter Logic
+        let count = 0;
+        cards.forEach(card => {
+          if(filterVal === '__all__' || card.dataset.group === filterVal){
+            card.style.display = 'flex';
+            count++;
+          } else {
+            card.style.display = 'none';
+          }
+        });
       });
     });
-
-    applyFilter();
   });
 </script>
 @endpush

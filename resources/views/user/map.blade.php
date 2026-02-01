@@ -1,581 +1,325 @@
 @extends('layouts.user')
-@section('title', 'Peta Titik Jemput Saya')
+@section('title', 'Live Tracking')
 
 @push('styles')
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <style>
+        :root {
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --radius: 20px;
+        }
 
-<style>
-  :root{
-    --brand:#10b981;
-    --brand-dark:#059669;
-    --brand-soft:#ecfdf5;
+        body, .page-container { font-family: "Plus Jakarta Sans", sans-serif; background-color: var(--bg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
-    --bg:#f9fafb;
-    --card:#ffffff;
-    --ink:#111827;
-    --muted:#6b7280;
-    --line:#e5e7eb;
+        /* ===== MAP CONTAINER (FULL SCREEN FEEL) ===== */
+        .map-wrapper {
+            flex: 1; position: relative; width: 100%; height: 100%; z-index: 1;
+        }
+        #map { width: 100%; height: 100%; z-index: 1; }
 
-    --shadow-sm: 0 6px 18px rgba(15, 23, 42, 0.06);
-    --shadow:    0 12px 34px rgba(0,0,0,.10);
+        /* ===== FLOATING HEADER (OVERLAY) ===== */
+        .floating-header {
+            position: absolute; top: 20px; left: 20px; right: 20px; z-index: 1000;
+            display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none;
+        }
+        .header-card {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 16px 20px; border-radius: 16px; pointer-events: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.5);
+            max-width: 400px;
+        }
+        .header-title { font-size: 1.1rem; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px; margin: 0; }
+        .header-subtitle { font-size: 0.8rem; color: var(--muted); margin-top: 4px; font-weight: 600; }
 
-    --radius:16px;
-  }
+        /* ===== FLOATING CONTROLS (RIGHT) ===== */
+        .control-group {
+            display: flex; flex-direction: column; gap: 10px; pointer-events: auto;
+        }
+        .btn-float {
+            width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid var(--line);
+            color: var(--ink); display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); cursor: pointer; transition: 0.2s; font-size: 1.1rem;
+        }
+        .btn-float:hover { transform: scale(1.05); color: var(--brand); border-color: var(--brand); }
+        .btn-float.active { background: var(--brand); color: #fff; border-color: var(--brand); }
 
-  body, .page, input, select, textarea, button, a{
-    font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  }
+        /* ===== FILTER BAR (BOTTOM CENTER) ===== */
+        .floating-filter {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            padding: 8px; border-radius: 50px; display: flex; gap: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.5);
+            pointer-events: auto; width: max-content; max-width: 90%; overflow-x: auto;
+        }
+        .filter-chip {
+            padding: 8px 16px; border-radius: 50px; border: 1px solid transparent; background: transparent;
+            font-size: 0.8rem; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; transition: 0.2s;
+        }
+        .filter-chip:hover { background: #f1f5f9; }
+        .filter-chip.active { background: var(--brand); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
 
-  .container-fluid{
-    width:100%;
-    max-width:100%;
-    margin:0 auto;
-    padding-left:16px;
-    padding-right:16px;
-  }
-  @media (min-width:768px){
-    .container-fluid{ padding-left:24px; padding-right:24px; }
-  }
+        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
 
-  /* ===== HEADER ===== */
-  .page-header{
-    background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-    padding: 18px 0 16px;
-    color:#fff;
-    margin-bottom: 14px;
-    position:relative;
-    overflow:hidden;
-  }
-  .page-header::before{
-    content:"";
-    position:absolute;
-    inset:-90px -140px auto auto;
-    width:340px;height:340px;
-    background:rgba(255,255,255,.14);
-    border-radius:999px;
-    transform: rotate(18deg);
-  }
-  .page-header::after{
-    content:"";
-    position:absolute;
-    inset:auto auto -140px -140px;
-    width:300px;height:300px;
-    background:rgba(0,0,0,.08);
-    border-radius:999px;
-  }
-  .header-inner{
-    position:relative;
-    border-radius: var(--radius);
-    padding: 18px;
-    background: rgba(255,255,255,.10);
-    border: 1px solid rgba(255,255,255,.18);
-    box-shadow: 0 12px 30px rgba(0,0,0,.10);
-    backdrop-filter: blur(10px);
-  }
-  @media (min-width:768px){
-    .header-inner{ padding:22px; }
-  }
-  .title{
-    margin:0;
-    font-size: 1.35rem;
-    font-weight: 900;
-    letter-spacing:.2px;
-    display:flex;
-    align-items:center;
-    gap:10px;
-  }
-  .subtitle{
-    margin:6px 0 0;
-    font-size:.95rem;
-    opacity:.95;
-    max-width: 900px;
-  }
+        /* ===== LEAFLET CUSTOM ===== */
+        .leaflet-popup-content-wrapper { border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); font-family: "Plus Jakarta Sans", sans-serif; }
+        .leaflet-popup-content { margin: 14px; }
 
-  /* ===== CARD ===== */
-  .page{ padding-bottom: 18px; }
-  .card{
-    background: var(--card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow-sm);
-    overflow:hidden;
-  }
-  .card-head{
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--line);
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-    background:#fff;
-  }
-  .muted{ color: var(--muted); font-size:.875rem; font-weight:800; }
-
-  .actions{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-
-  .content{ padding: 16px; }
-
-  /* ===== BUTTON ===== */
-  .btnx{
-    display:inline-flex;
-    align-items:center;
-    justify-content:center;
-    gap:8px;
-    padding:10px 14px;
-    border-radius: 12px;
-    border:1px solid var(--line);
-    background:#fff;
-    color: var(--ink);
-    text-decoration:none;
-    cursor:pointer;
-    font-size:.875rem;
-    font-weight:900;
-    box-shadow: var(--shadow-sm);
-    transition:.2s;
-    line-height:1;
-    white-space:nowrap;
-  }
-  .btnx:hover{
-    transform: translateY(-1px);
-    box-shadow: var(--shadow);
-    border-color: rgba(16,185,129,.45);
-  }
-  .btnx-primary{
-    background: var(--brand);
-    border-color: var(--brand);
-    color:#fff;
-  }
-  .btnx-primary:hover{
-    background: var(--brand-dark);
-    border-color: var(--brand-dark);
-  }
-  .btnx-soft{
-    background: var(--brand-soft);
-    border-color: rgba(16,185,129,.22);
-    color:#065f46;
-  }
-
-  /* ===== TOOLBAR ===== */
-  .toolbar{
-    display:flex;
-    gap:12px;
-    flex-wrap:wrap;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom: 12px;
-  }
-  .toolbar-left{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    flex-wrap:wrap;
-  }
-  .info-pill{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:8px 10px;
-    border-radius: 999px;
-    border: 1px solid rgba(16,185,129,.20);
-    background: var(--brand-soft);
-    color:#065f46;
-    font-weight:900;
-    font-size:.85rem;
-  }
-
-  .toolbar-right{
-    display:flex;
-    gap:10px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
-
-  .selectx{
-    padding:10px 12px;
-    border-radius: 12px;
-    border:1px solid var(--line);
-    background:#fff;
-    font-weight:900;
-    outline:none;
-    min-width: 200px;
-  }
-  .selectx:focus{
-    border-color: rgba(16,185,129,.45);
-    box-shadow: 0 0 0 3px rgba(16,185,129,.12);
-  }
-
-  /* ===== MAP ===== */
-  #map{
-    height: 600px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    overflow:hidden;
-    background:#fff;
-    box-shadow: 0 10px 24px rgba(0,0,0,.06);
-  }
-
-  /* ===== LEGEND ===== */
-  .legend{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    margin-top: 12px;
-  }
-  .chip{
-    padding:8px 10px;
-    border-radius:999px;
-    border:1px solid var(--line);
-    background:#fff;
-    font-weight:900;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    color: var(--ink);
-    box-shadow: 0 6px 16px rgba(15,23,42,.05);
-  }
-  .dot{ width:10px;height:10px;border-radius:999px;display:inline-block; }
-  .chip small{ font-weight:800; color: var(--muted); }
-
-  /* Leaflet */
-  .leaflet-control-attribution{ font-size: 11px; }
-</style>
+        /* Status Indicator Pulse */
+        .live-indicator {
+            display: inline-block; width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%;
+            animation: pulse-red 2s infinite; margin-right: 6px;
+        }
+        @keyframes pulse-red {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="page">
+<div class="page-container">
 
-  {{-- HEADER --}}
-  <div class="page-header">
-    <div class="container-fluid">
-      <div class="header-inner">
-        <h2 class="title">
-          <i class="fa-solid fa-map-location-dot"></i>
-          Peta Titik Jemput Saya
-        </h2>
-        <p class="subtitle">
-          Lihat status setoran jemput & posisi petugas realtime (jika tracking aktif). Kamu bisa filter status untuk fokus ke setoran tertentu.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div class="container-fluid">
-    <div class="card">
-      <div class="card-head">
-        <div class="muted">
-          <i class="fa-solid fa-circle-info"></i>
-          Monitoring jemput & tracking petugas.
-        </div>
-        <div class="actions">
-          <a class="btnx" href="{{ route('user.dashboard') }}">
-            <i class="fa-solid fa-house"></i> Dashboard
-          </a>
-          <a class="btnx btnx-soft" href="{{ route('user.setoran.index') }}">
-            <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Setoran
-          </a>
-        </div>
-      </div>
-
-      <div class="content">
-
-        <div class="toolbar">
-          <div class="toolbar-left">
-            <div class="info-pill" id="infoText">
-              <i class="fa-solid fa-spinner fa-spin"></i> Memuat data...
-            </div>
-            <div class="muted">
-              <i class="fa-solid fa-satellite-dish"></i> Update berkala
-            </div>
-          </div>
-
-          <div class="toolbar-right">
-            <span class="muted"><i class="fa-solid fa-filter"></i> Filter status</span>
-            <select id="statusFilter" class="selectx">
-              <option value="__all__">Semua</option>
-              <option value="pending">PENDING</option>
-              <option value="diambil">DIAMBIL</option>
-              <option value="selesai">SELESAI</option>
-              <option value="ditolak">DITOLAK</option>
-            </select>
-          </div>
-        </div>
-
+    <div class="map-wrapper">
         <div id="map"></div>
 
-        <div class="legend">
-          <div class="chip"><span class="dot" style="background:#22c55e"></span> Titik Jemput</div>
-          <div class="chip"><span class="dot" style="background:#f59e0b"></span> Pending</div>
-          <div class="chip"><span class="dot" style="background:#3b82f6"></span> Diambil</div>
-          <div class="chip"><span class="dot" style="background:#9ca3af"></span> Selesai</div>
-          <div class="chip"><span class="dot" style="background:#ef4444"></span> Ditolak</div>
-          <div class="chip">🚛 <small>= posisi petugas</small></div>
-          <div class="chip">🧭 <small>= rute petugas → titik</small></div>
+        {{-- TOP LEFT: INFO --}}
+        <div class="floating-header">
+            <div class="header-card">
+                <h1 class="header-title">
+                    <i class="fa-solid fa-map-location-dot" style="color:var(--brand)"></i> Peta Jemputan
+                </h1>
+                <div class="header-subtitle">
+                    <span class="live-indicator"></span> Monitoring realtime posisi armada & status jemputan.
+                </div>
+                <div style="margin-top:8px; font-size:0.75rem; color:var(--muted); font-weight:600;" id="infoText">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Menghubungkan ke satelit...
+                </div>
+            </div>
+
+            {{-- TOP RIGHT: ACTIONS --}}
+            <div class="control-group">
+                <a href="{{ route('user.dashboard') }}" class="btn-float" title="Dashboard">
+                    <i class="fa-solid fa-house"></i>
+                </a>
+                <a href="{{ route('user.setoran.index') }}" class="btn-float" title="Riwayat">
+                    <i class="fa-solid fa-list"></i>
+                </a>
+                <button class="btn-float" onclick="map.setView([0.5071, 101.4478], 13)" title="Reset View">
+                    <i class="fa-solid fa-compress"></i>
+                </button>
+            </div>
         </div>
 
-      </div>
+        {{-- BOTTOM CENTER: FILTER --}}
+        <div class="floating-filter" id="filterContainer">
+            <button class="filter-chip active" onclick="setFilter('__all__', this)">Semua</button>
+            <button class="filter-chip" onclick="setFilter('pending', this)"><span class="dot" style="background:#f59e0b"></span> Menunggu</button>
+            <button class="filter-chip" onclick="setFilter('diambil', this)"><span class="dot" style="background:#3b82f6"></span> Diambil</button>
+            <button class="filter-chip" onclick="setFilter('selesai', this)"><span class="dot" style="background:#94a3b8"></span> Selesai</button>
+        </div>
     </div>
-  </div>
+
 </div>
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  const dataUrl = "{{ route('user.map.data') }}";
-  const detailUrlBase = "{{ url('/user/setoran') }}";
+    // --- CONFIG & STATE ---
+    const dataUrl = "{{ route('user.map.data') }}";
+    const detailUrlBase = "{{ url('/user/setoran') }}";
+    let activeFilter = '__all__';
 
-  const map = L.map('map').setView([0.5071, 101.4478], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    // --- MAP INIT ---
+    const map = L.map('map', { zoomControl: false }).setView([0.5071, 101.4478], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OSM' }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map); // Pindah zoom control ke bawah kanan
 
-  const pickupMarkers = new Map(); // id -> marker
-  const truckMarkers  = new Map(); // id -> marker
-  const routeLines    = new Map(); // id -> {outline, main}
-  const routeCache    = new Map(); // id -> {fromLat, fromLng, at, routeInfo}
-
-  const truckIcon = L.divIcon({ html: "🚛", className: "", iconSize: [28,28], iconAnchor:[14,14] });
-
-  function colorByStatus(status){
-    const s = String(status||'').toLowerCase();
-    if(s === 'pending') return '#f59e0b';
-    if(s === 'diambil') return '#3b82f6';
-    if(s === 'selesai') return '#9ca3af';
-    if(s === 'ditolak') return '#ef4444';
-    return '#22c55e';
-  }
-
-  function circleIcon(color){
-    return L.divIcon({
-      className: "",
-      html: `<div style="width:16px;height:16px;border-radius:999px;background:${color};
-        border:3px solid rgba(255,255,255,.95);box-shadow:0 10px 24px rgba(0,0,0,.18);"></div>`,
-      iconSize:[16,16], iconAnchor:[8,8]
+    // --- ASSETS ---
+    const truckIcon = L.divIcon({
+        html: `<div style="background:#fff; border-radius:50%; width:36px; height:36px; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(0,0,0,0.2); font-size:1.2rem;">🚛</div>`,
+        className: "", iconSize: [36,36], iconAnchor:[18,18]
     });
-  }
 
-  function fmtKm(m){ return (m/1000).toFixed(1) + " km"; }
-  function fmtEta(seconds){
-    const m = Math.round(seconds/60);
-    if(m < 60) return m + " menit";
-    const h = Math.floor(m/60);
-    const r = m % 60;
-    return h + " jam " + r + " menit";
-  }
-
-  function shouldShow(status, filter){
-    if(filter === '__all__') return true;
-    return String(status||'').toLowerCase() === filter;
-  }
-
-  function popupHtml(it, routeInfo){
-    const s = String(it.status||'').toUpperCase();
-    const addr = it.alamat ? it.alamat : '-';
-    const seen = it.petugas_last_seen ? it.petugas_last_seen : '-';
-    const hasPetugas = (it.petugas_id != null && it.petugas_id !== undefined && it.petugas_id !== '');
-    const hasTruck = (it.petugas_lat != null && it.petugas_lat !== '' &&
-                     it.petugas_lng != null && it.petugas_lng !== '' &&
-                     !isNaN(Number(it.petugas_lat)) && !isNaN(Number(it.petugas_lng)) &&
-                     Number(it.petugas_lat) !== 0 && Number(it.petugas_lng) !== 0);
-    const petName = it.petugas_name || 'Petugas';
-
-    const petugasInfo = hasTruck
-      ? `🚛 ${petName} - Tracking aktif`
-      : hasPetugas
-        ? `${petName} - Belum mulai tracking`
-        : 'Belum ada petugas';
-
-    const routePart = routeInfo
-      ? `<div style="margin-top:6px"><b>ETA:</b> ${routeInfo.eta} • <b>Jarak:</b> ${routeInfo.dist}</div>`
-      : `<div style="margin-top:6px"><b>ETA/Jarak:</b> -</div>`;
-
-    return `
-      <div style="font-family:Plus Jakarta Sans, Arial;min-width:250px">
-        <div style="font-weight:900;font-size:14px">Setoran #${it.id}</div>
-        <div style="margin-top:6px"><b>Status:</b> ${s}</div>
-        <div style="margin-top:6px"><b>Alamat:</b><br>${addr}</div>
-        <div style="margin-top:6px"><b>Koordinat:</b> ${it.lat.toFixed(6)}, ${it.lng.toFixed(6)}</div>
-        <div style="margin-top:6px"><b>Petugas:</b> ${petugasInfo}</div>
-        <div style="margin-top:6px"><b>Last seen:</b> ${seen}</div>
-        ${routePart}
-        <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-          <a href="${detailUrlBase}/${it.id}" style="display:inline-block;padding:8px 10px;border:1px solid #e5e7eb;border-radius:10px;text-decoration:none;font-weight:900;color:#111827;background:#fff">Detail</a>
-          <a target="_blank" href="https://www.google.com/maps?q=${it.lat},${it.lng}" style="display:inline-block;padding:8px 10px;border:1px solid rgba(16,185,129,.35);border-radius:10px;text-decoration:none;font-weight:900;color:#065f46;background:#ecfdf5">Maps</a>
-        </div>
-      </div>
-    `;
-  }
-
-  function clearRoute(id){
-    if(routeLines.has(id)){
-      const r = routeLines.get(id);
-      if(r.outline) map.removeLayer(r.outline);
-      if(r.main) map.removeLayer(r.main);
-      routeLines.delete(id);
-    }
-  }
-
-  function setRoute(id, coordsLatLng){
-    clearRoute(id);
-    const outline = L.polyline(coordsLatLng, { weight: 11, opacity: 0.28 }).addTo(map);
-    const main    = L.polyline(coordsLatLng, { weight: 7, opacity: 0.9 }).addTo(map);
-    routeLines.set(id, { outline, main });
-  }
-
-  async function drawRouteIfNeeded(it){
-    const hasTruck = (it.petugas_lat != null && it.petugas_lat !== '' &&
-                     it.petugas_lng != null && it.petugas_lng !== '' &&
-                     !isNaN(it.petugas_lat) && !isNaN(it.petugas_lng) &&
-                     it.petugas_lat !== 0 && it.petugas_lng !== 0);
-    if(!hasTruck){
-      clearRoute(it.id);
-      return null;
+    function circleIcon(color){
+        return L.divIcon({
+            className: "",
+            html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 0 0 4px ${color}40;"></div>`,
+            iconSize:[14,14], iconAnchor:[7,7]
+        });
     }
 
-    const now = Date.now();
-    const cache = routeCache.get(it.id);
+    const colorMap = {
+        'pending': '#f59e0b', 'diambil': '#3b82f6', 'selesai': '#94a3b8', 'ditolak': '#ef4444', 'default': '#10b981'
+    };
 
-    const movedEnough = !cache
-      ? true
-      : (Math.abs(cache.fromLat - it.petugas_lat) + Math.abs(cache.fromLng - it.petugas_lng)) > 0.0002;
+    // --- STATE STORAGE ---
+    const layers = { pickup: new Map(), truck: new Map(), route: new Map() };
+    const cache = { route: new Map() };
 
-    const timeEnough = !cache ? true : (now - cache.at) > 7000; // 7 detik (lebih ringan)
-
-    if(!movedEnough && !timeEnough){
-      return cache?.routeInfo ?? null;
+    // --- HELPER FUNCTIONS ---
+    function setFilter(val, btn) {
+        activeFilter = val;
+        document.querySelectorAll('.filter-chip').forEach(el => el.classList.remove('active'));
+        btn.classList.add('active');
+        refresh(); // Trigger refresh manual
     }
 
-    const url = `https://router.project-osrm.org/route/v1/driving/${it.petugas_lng},${it.petugas_lat};${it.lng},${it.lat}?overview=full&geometries=geojson`;
-
-    try{
-      const res = await fetch(url, { cache: "no-store" });
-      const data = await res.json();
-      if(!data.routes || !data.routes[0]) return null;
-
-      const r = data.routes[0];
-      const coords = r.geometry.coordinates.map(c => [c[1], c[0]]);
-      setRoute(it.id, coords);
-
-      const routeInfo = { eta: fmtEta(r.duration), dist: fmtKm(r.distance) };
-      routeCache.set(it.id, { fromLat: it.petugas_lat, fromLng: it.petugas_lng, at: now, routeInfo });
-      return routeInfo;
-    }catch(e){
-      return null;
+    function shouldShow(status) {
+        if(activeFilter === '__all__') return true;
+        return String(status||'').toLowerCase() === activeFilter;
     }
-  }
 
-  async function refresh(){
-    try{
-      const filter = document.getElementById('statusFilter').value;
-      const res = await fetch(dataUrl, { cache: "no-store" });
-      if(!res.ok) return;
+    function fmtEta(seconds){
+        const m = Math.round(seconds/60);
+        if(m < 60) return m + " mnt";
+        return Math.floor(m/60) + "j " + (m%60) + "m";
+    }
 
-      const data = await res.json();
-      const items = data.items || [];
+    // --- POPUP CONTENT ---
+    function getPopupContent(it, routeInfo) {
+        const color = colorMap[String(it.status).toLowerCase()] || colorMap.default;
+        const truckBadge = routeInfo
+            ? `<div style="margin-top:8px; padding:8px; background:#f8fafc; border-radius:8px; font-size:0.75rem;">
+                 <div style="font-weight:700; color:#0f172a;">🚛 ${it.petugas_name || 'Petugas'}</div>
+                 <div style="display:flex; justify-content:space-between; margin-top:4px;">
+                    <span>⏳ ${routeInfo.eta}</span> <span>📏 ${routeInfo.dist}</span>
+                 </div>
+               </div>`
+            : '';
 
-      const info = document.getElementById('infoText');
-      info.innerHTML = `<i class="fa-solid fa-location-dot"></i> Total titik jemput: <b>${items.length}</b> • Realtime update`;
+        return `
+            <div style="min-width:200px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span style="background:${color}20; color:${color}; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:800; text-transform:uppercase;">${it.status}</span>
+                    <a href="${detailUrlBase}/${it.id}" style="font-size:0.75rem; font-weight:700; color:#64748b; text-decoration:none;">Detail ></a>
+                </div>
+                <div style="font-weight:700; color:#0f172a; font-size:0.9rem; margin-bottom:4px;">${it.alamat || 'Alamat tidak tersedia'}</div>
+                <div style="font-size:0.7rem; color:#94a3b8;">ID: #${it.id}</div>
+                ${truckBadge}
+            </div>
+        `;
+    }
 
-      let bounds = [];
-      const alivePickup = new Set();
-      const aliveTruck  = new Set();
-      const aliveRoute  = new Set();
+    // --- ROUTING LOGIC (OSRM) ---
+    async function fetchRoute(start, end, id) {
+        // Simple throttling: Don't fetch if update < 5s ago
+        const now = Date.now();
+        const last = cache.route.get(id);
+        if(last && (now - last.time < 5000)) return last.data;
 
-      for(const it of items){
-        const ok = shouldShow(it.status, filter);
-        alivePickup.add(it.id);
+        try {
+            const url = `https://router.project-osrm.org/route/v1/driving/${start.lng},${start.lat};${end.lng},${end.lat}?overview=full&geometries=geojson`;
+            const res = await fetch(url);
+            const json = await res.json();
 
-        const icon = circleIcon(colorByStatus(it.status));
-        if(!pickupMarkers.has(it.id)){
-          const m = L.marker([it.lat, it.lng], { icon }).addTo(map);
-          pickupMarkers.set(it.id, m);
-        }else{
-          pickupMarkers.get(it.id).setLatLng([it.lat, it.lng]);
-          pickupMarkers.get(it.id).setIcon(icon);
-        }
+            if(!json.routes || !json.routes[0]) return null;
 
-        const routeInfo = await drawRouteIfNeeded(it);
-        pickupMarkers.get(it.id).bindPopup(popupHtml(it, routeInfo));
-        pickupMarkers.get(it.id).setOpacity(ok ? 1 : 0);
-        if(ok) bounds.push([it.lat, it.lng]);
+            const r = json.routes[0];
+            const result = {
+                coords: r.geometry.coordinates.map(c => [c[1], c[0]]),
+                info: { eta: fmtEta(r.duration), dist: (r.distance/1000).toFixed(1)+' km' }
+            };
 
-        const hasPetugas = (it.petugas_id != null && it.petugas_id !== undefined && it.petugas_id !== '');
-        const hasTruck = (hasPetugas &&
-          it.petugas_lat != null && it.petugas_lat !== '' &&
-          it.petugas_lng != null && it.petugas_lng !== '' &&
-          !isNaN(Number(it.petugas_lat)) && !isNaN(Number(it.petugas_lng)) &&
-          Number(it.petugas_lat) !== 0 && Number(it.petugas_lng) !== 0);
+            cache.route.set(id, { time: now, data: result });
+            return result;
+        } catch(e) { return null; }
+    }
 
-        if(hasTruck){
-          const petLat = Number(it.petugas_lat);
-          const petLng = Number(it.petugas_lng);
+    // --- MAIN REFRESH LOOP ---
+    async function refresh() {
+        try {
+            const res = await fetch(dataUrl);
+            if(!res.ok) return;
+            const data = await res.json();
+            const items = data.items || [];
 
-          aliveTruck.add(it.id);
-          if(!truckMarkers.has(it.id)){
-            const tm = L.marker([petLat, petLng], { icon: truckIcon }).addTo(map);
-            tm.bindPopup(`<b>🚛 Petugas</b><br>Setoran #${it.id}<br>Last seen: ${it.petugas_last_seen || '-'}`);
-            truckMarkers.set(it.id, tm);
-          }else{
-            truckMarkers.get(it.id).setLatLng([petLat, petLng]);
-            truckMarkers.get(it.id).setPopupContent(`<b>🚛 Petugas</b><br>Setoran #${it.id}<br>Last seen: ${it.petugas_last_seen || '-'}`);
-          }
+            document.getElementById('infoText').innerHTML = `Aktif: <b>${items.length} titik</b> • Update: ${new Date().toLocaleTimeString()}`;
 
-          truckMarkers.get(it.id).setOpacity(ok ? 1 : 0);
-          if(ok) bounds.push([petLat, petLng]);
+            const activeIds = new Set();
 
-          if(ok) aliveRoute.add(it.id);
-          else clearRoute(it.id);
-        }else{
-          if(truckMarkers.has(it.id)){
-            map.removeLayer(truckMarkers.get(it.id));
-            truckMarkers.delete(it.id);
-          }
-          clearRoute(it.id);
-        }
-      }
+            for(const it of items) {
+                if(!shouldShow(it.status)) continue;
+                activeIds.add(it.id);
 
-      for(const [id, m] of pickupMarkers){
-        if(!alivePickup.has(id)){
-          map.removeLayer(m);
-          pickupMarkers.delete(id);
-          clearRoute(id);
-          if(truckMarkers.has(id)){
-            map.removeLayer(truckMarkers.get(id));
-            truckMarkers.delete(id);
-          }
-        }
-      }
-      for(const [id, m] of truckMarkers){
-        if(!aliveTruck.has(id)){
-          map.removeLayer(m);
-          truckMarkers.delete(id);
-        }
-      }
-      for(const [id] of routeLines){
-        if(!aliveRoute.has(id)){
-          clearRoute(id);
-        }
-      }
+                // 1. PICKUP MARKER
+                const color = colorMap[String(it.status).toLowerCase()] || colorMap.default;
+                let marker = layers.pickup.get(it.id);
+                if(!marker) {
+                    marker = L.marker([it.lat, it.lng], { icon: circleIcon(color) }).addTo(map);
+                    layers.pickup.set(it.id, marker);
+                } else {
+                    marker.setLatLng([it.lat, it.lng]).setIcon(circleIcon(color));
+                }
 
-      if(bounds.length){
-        map.fitBounds(L.latLngBounds(bounds).pad(0.2));
-      }
-    }catch(e){}
-  }
+                // 2. TRUCK & ROUTE LOGIC
+                const hasTruck = (it.petugas_lat && it.petugas_lng);
+                let routeInfo = null;
 
-  document.getElementById('statusFilter').addEventListener('change', refresh);
+                if(hasTruck) {
+                    const truckPos = { lat: Number(it.petugas_lat), lng: Number(it.petugas_lng) };
 
-  refresh();
+                    // Truck Marker
+                    let truck = layers.truck.get(it.id);
+                    if(!truck) {
+                        truck = L.marker(truckPos, { icon: truckIcon, zIndexOffset: 1000 }).addTo(map);
+                        layers.truck.set(it.id, truck);
+                    } else {
+                        // Simple animation logic can be added here
+                        truck.setLatLng(truckPos);
+                    }
 
-  // NOTE: 1 detik terlalu berat. 3 detik lebih aman untuk UX + server.
-  setInterval(refresh, 3000);
+                    // Draw Route
+                    const routeData = await fetchRoute(truckPos, {lat: it.lat, lng: it.lng}, it.id);
+                    if(routeData) {
+                        routeInfo = routeData.info;
+                        let line = layers.route.get(it.id);
+                        if(!line) {
+                            line = L.polyline(routeData.coords, { color: color, weight: 4, opacity: 0.8, dashArray: '10, 10' }).addTo(map);
+                            layers.route.set(it.id, line);
+                        } else {
+                            line.setLatLngs(routeData.coords).setStyle({ color: color });
+                        }
+                    }
+                } else {
+                    // Cleanup truck/route if tracking stopped
+                    if(layers.truck.has(it.id)) { map.removeLayer(layers.truck.get(it.id)); layers.truck.delete(it.id); }
+                    if(layers.route.has(it.id)) { map.removeLayer(layers.route.get(it.id)); layers.route.delete(it.id); }
+                }
+
+                // Update Popup Content
+                if(marker.getPopup() && marker.getPopup().isOpen()) {
+                    marker.setPopupContent(getPopupContent(it, routeInfo));
+                } else {
+                    marker.bindPopup(getPopupContent(it, routeInfo));
+                }
+            }
+
+            // Cleanup removed items
+            ['pickup', 'truck', 'route'].forEach(type => {
+                for(const [id, layer] of layers[type]) {
+                    if(!activeIds.has(id)) {
+                        map.removeLayer(layer);
+                        layers[type].delete(id);
+                    }
+                }
+            });
+
+        } catch(e) { console.error("Map sync error", e); }
+    }
+
+    // Init & Interval
+    refresh();
+    setInterval(refresh, 4000); // 4 detik agar tidak spamming OSRM
 </script>
 @endpush

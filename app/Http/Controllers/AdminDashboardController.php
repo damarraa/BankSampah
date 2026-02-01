@@ -20,30 +20,30 @@ class AdminDashboardController extends Controller
         $totalAdmins = User::where('role', 'admin')->count();
         $totalPetugas = User::where('role', 'petugas')->count();
         $totalNasabah = User::where('role', 'user')->count();
-        
+
         // Setoran Statistics
         $totalSetoran = SetoranSampah::count();
         $totalSetoranPending = SetoranSampah::where('status', 'pending')->count();
         $totalSetoranDijemput = SetoranSampah::where('status', 'dijemput')->count();
         $totalSetoranSelesai = SetoranSampah::where('status', 'selesai')->count();
         $totalSetoranDitolak = SetoranSampah::where('status', 'ditolak')->count();
-        
+
         // Revenue Statistics
         $totalRevenue = SetoranSampahDetail::sum('subtotal');
         $monthlyRevenue = SetoranSampahDetail::whereMonth('created_at', now()->month)
             ->whereYear('created_at', now()->year)
             ->sum('subtotal');
-        
+
         // Kategori Statistics
         $totalKategori = MasterKategoriSampah::count();
         $totalJenisSampah = KategoriSampah::count();
-        
+
         // Recent Transactions (Last 5 setoran)
         $recentSetoran = SetoranSampah::with(['user', 'petugas'])
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
-        
+
         // Top Kategori Sampah (by jumlah transaksi) - FIXED QUERY
         $topKategori = KategoriSampah::select([
                 'kategori_sampah.id',
@@ -70,7 +70,7 @@ class AdminDashboardController extends Controller
             ->orderBy('jumlah_transaksi', 'desc')
             ->take(5)
             ->get();
-        
+
         // Monthly Statistics for Chart
         $monthlySetoran = SetoranSampah::select(
                 DB::raw('MONTH(created_at) as month'),
@@ -80,7 +80,7 @@ class AdminDashboardController extends Controller
             ->groupBy('month')
             ->orderBy('month')
             ->get();
-        
+
         $monthlyRevenueData = SetoranSampahDetail::select(
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('COALESCE(SUM(subtotal), 0) as total')
@@ -89,7 +89,7 @@ class AdminDashboardController extends Controller
             ->groupBy('month')
             ->orderBy('month')
             ->get();
-        
+
         // User Growth (Last 6 months)
         $userGrowth = User::select(
                 DB::raw('DATE_FORMAT(created_at, "%Y-%m") as month'),
@@ -99,12 +99,12 @@ class AdminDashboardController extends Controller
             ->groupBy('month')
             ->orderBy('month')
             ->get();
-        
+
         // Today's Statistics
         $todaySetoran = SetoranSampah::whereDate('created_at', today())->count();
         $todayRevenue = SetoranSampahDetail::whereDate('created_at', today())->sum('subtotal');
         $todayUsers = User::whereDate('created_at', today())->count();
-        
+
         // Setoran Status Distribution
         $setoranStatus = [
             'pending' => SetoranSampah::where('status', 'pending')->count(),
@@ -112,14 +112,14 @@ class AdminDashboardController extends Controller
             'selesai' => SetoranSampah::where('status', 'selesai')->count(),
             'ditolak' => SetoranSampah::where('status', 'ditolak')->count(),
         ];
-        
+
         // User Role Distribution
         $userRoleDistribution = [
             'admin' => User::where('role', 'admin')->count(),
             'petugas' => User::where('role', 'petugas')->count(),
             'user' => User::where('role', 'user')->count(),
         ];
-        
+
         return view('admin.dashboard', compact(
             'totalUsers',
             'totalAdmins',
@@ -146,23 +146,23 @@ class AdminDashboardController extends Controller
             'userRoleDistribution'
         ));
     }
-    
+
     public function getChartData(Request $request)
     {
         $year = $request->get('year', now()->year);
-        
+
         $monthlyData = SetoranSampah::select(
                 DB::raw('MONTH(created_at) as month'),
                 DB::raw('COUNT(*) as total_setoran'),
-                DB::raw('(SELECT COALESCE(SUM(subtotal), 0) FROM setoran_sampah_detail 
-                    WHERE MONTH(created_at) = MONTH(setoran_sampah.created_at) 
+                DB::raw('(SELECT COALESCE(SUM(subtotal), 0) FROM setoran_sampah_detail
+                    WHERE MONTH(created_at) = MONTH(setoran_sampah.created_at)
                     AND YEAR(created_at) = YEAR(setoran_sampah.created_at)) as total_pendapatan')
             )
             ->whereYear('created_at', $year)
             ->groupBy('month')
             ->orderBy('month')
             ->get();
-        
+
         return response()->json($monthlyData);
     }
 }

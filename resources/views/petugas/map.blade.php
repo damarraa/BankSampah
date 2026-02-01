@@ -1,227 +1,253 @@
-@extends('layouts.petugas') {{-- sesuaikan nama layout petugas kamu --}}
+@extends('layouts.petugas')
 
-@section('title', 'Peta Semua Titik Jemput')
+@section('title', 'Peta Jemputan')
 
 @push('styles')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 
-<style>
-  :root{
-    --bg:#0b1220; --text:#eaf0ff; --muted:#93a4c7;
-    --line:rgba(255,255,255,.10);
-    --shadow:0 18px 60px rgba(0,0,0,.35);
-    --radius:18px;
-  }
+    <style>
+        /* ===== MAP CONTAINER (FULL SCREEN) ===== */
+        .map-layout {
+            position: relative; height: calc(100vh - 70px); width: 100%;
+            overflow: hidden; background: #e5e7eb;
+        }
+        #map { height: 100%; width: 100%; z-index: 1; }
 
-  .page-bg{
-    padding: 18px;
-    border-radius: 18px;
-    background:
-      radial-gradient(1200px 600px at 20% 0%, rgba(34,197,94,.18), transparent 55%),
-      radial-gradient(900px 500px at 90% 15%, rgba(59,130,246,.16), transparent 60%),
-      var(--bg);
-    color: var(--text);
-    border: 1px solid rgba(255,255,255,.06);
-  }
+        /* ===== FLOATING HUD ===== */
+        .hud-panel {
+            position: absolute; z-index: 1000;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(8px);
+            border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.5); transition: 0.3s;
+        }
 
-  .wrap{max-width:1200px;margin:0 auto}
-  .head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
-  .title{margin:0;font-size:22px;font-weight:800}
-  .sub{margin:6px 0 0;color:var(--muted);font-size:13px}
+        /* Top Left: Title */
+        .hud-info {
+            top: 20px; left: 20px; padding: 12px 16px; min-width: 200px;
+        }
+        .hud-title { font-size: 1rem; font-weight: 800; color: #111827; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .hud-sub { font-size: 0.75rem; color: #6b7280; font-weight: 600; }
+        .pulse-dot {
+            width: 8px; height: 8px; background: #22c55e; border-radius: 50%;
+            box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); animation: pulse-green 2s infinite;
+        }
 
-  .btn{
-    padding:10px 14px;border:1px solid var(--line);border-radius:12px;
-    text-decoration:none;background: rgba(255,255,255,.04);
-    color: var(--text);
-    cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:8px;
-    font-size:13px;
-  }
-  .btn:hover{filter: brightness(1.06)}
+        /* Top Right: Filter */
+        .hud-filter {
+            top: 20px; right: 20px; padding: 8px; display: flex; gap: 8px;
+        }
+        .filter-btn {
+            padding: 8px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #fff;
+            font-size: 0.8rem; font-weight: 700; color: #64748b; cursor: pointer; white-space: nowrap;
+        }
+        .filter-btn.active { background: #22c55e; color: #fff; border-color: #22c55e; }
 
-  .box{
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-    border:1px solid var(--line);border-radius:var(--radius);
-    box-shadow:var(--shadow);
-    padding:12px;
-  }
+        /* Bottom Center: Legend */
+        .hud-legend {
+            bottom: 30px; left: 50%; transform: translateX(-50%);
+            padding: 8px 16px; border-radius: 50px; display: flex; gap: 16px; align-items: center;
+        }
+        .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: #64748b; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; border: 2px solid #fff; }
 
-  .muted{color:var(--muted);font-size:13px;font-weight:700}
+        /* Sidebar Detail (Slide-in) */
+        .map-sidebar {
+            position: absolute; bottom: 0; left: 0; right: 0; z-index: 1001;
+            background: #fff; border-radius: 20px 20px 0 0;
+            box-shadow: 0 -5px 25px rgba(0,0,0,0.1);
+            transform: translateY(100%); transition: transform 0.3s ease;
+            max-height: 60%; display: flex; flex-direction: column;
+        }
+        .map-sidebar.active { transform: translateY(0); }
 
-  .toolbar{
-    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
-    justify-content:space-between;margin-bottom:10px
-  }
+        .sidebar-header {
+            padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sidebar-body { padding: 20px; overflow-y: auto; }
 
-  select{
-    padding:10px 12px;border-radius:12px;border:1px solid var(--line);
-    background: rgba(10,15,26,.55);
-    color: var(--text);
-    font-weight:700;
-    outline:none;
-  }
-  select:focus{
-    border-color: rgba(34,197,94,.5);
-    box-shadow: 0 0 0 3px rgba(34,197,94,.15);
-  }
+        .btn-close { background: none; border: none; font-size: 1.2rem; color: #94a3b8; }
 
-  #map{height:600px;border:1px solid rgba(255,255,255,.12);border-radius:16px;overflow:hidden}
+        .btn-action {
+            display: block; width: 100%; text-align: center; padding: 12px;
+            background: #22c55e; color: #fff; font-weight: 700; border-radius: 10px;
+            text-decoration: none; margin-top: 16px;
+        }
 
-  .legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-  .chip{
-    padding:8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.10);
-    background: rgba(255,255,255,.03);
-    font-weight:700;display:flex;align-items:center;gap:8px;color:var(--text)
-  }
-  .dot{width:10px;height:10px;border-radius:999px;display:inline-block}
-</style>
+        @keyframes pulse-green {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        @media (min-width: 768px) {
+            .map-sidebar {
+                top: 20px; right: 20px; bottom: 20px; left: auto; width: 350px;
+                border-radius: 16px; transform: translateX(120%); max-height: none;
+            }
+            .map-sidebar.active { transform: translateX(0); }
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="page-bg">
-  <div class="wrap">
-    <div class="head">
-      <div>
-        <h1 class="title">🚛 Petugas — Peta Semua Titik Jemput</h1>
-        <p class="sub">Lihat semua titik jemput + statusnya. Yang assigned ke kamu ditandai hijau.</p>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <a class="btn" href="{{ route('petugas.setoran.index') }}">📦 Daftar Setoran</a>
-      </div>
-    </div>
+<div class="map-layout">
+    <div id="map"></div>
 
-    <div class="box">
-      <div class="toolbar">
-        <div class="muted" id="infoText">Memuat data...</div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <span class="muted">Filter status:</span>
-          <select id="statusFilter">
-            <option value="__all__">Semua</option>
-            <option value="pending">PENDING</option>
-            <option value="diproses">DIPROSES</option>
-            <option value="diambil">DIAMBIL</option>
-            <option value="selesai">SELESAI</option>
-          </select>
+    {{-- HUD Info --}}
+    <div class="hud-panel hud-info">
+        <div class="hud-title">
+            <div class="pulse-dot"></div> Peta Jemputan
         </div>
-      </div>
-
-      <div id="map"></div>
-
-      <div class="legend">
-        <div class="chip"><span class="dot" style="background:#22c55e"></span>Titik Jemput (Assigned ke Saya)</div>
-        <div class="chip"><span class="dot" style="background:#f59e0b"></span>Pending</div>
-        <div class="chip"><span class="dot" style="background:#3b82f6"></span>Diproses/Diambil</div>
-        <div class="chip"><span class="dot" style="background:#9ca3af"></span>Selesai</div>
-      </div>
+        <div class="hud-sub" id="infoText">Memuat data...</div>
     </div>
-  </div>
+
+    {{-- HUD Filter --}}
+    <div class="hud-panel hud-filter">
+        <button class="filter-btn active" onclick="setFilter('__all__', this)">Semua</button>
+        <button class="filter-btn" onclick="setFilter('pending', this)">Baru</button>
+        <button class="filter-btn" onclick="setFilter('assigned', this)">Tugas Saya</button>
+    </div>
+
+    {{-- HUD Legend --}}
+    <div class="hud-panel hud-legend">
+        <div class="legend-item"><div class="dot" style="background:#22c55e; width:14px; height:14px;"></div> Tugas Saya</div>
+        <div class="legend-item"><div class="dot" style="background:#f59e0b"></div> Pending</div>
+        <div class="legend-item"><div class="dot" style="background:#3b82f6"></div> Proses</div>
+    </div>
+
+    {{-- Sidebar Detail --}}
+    <div class="map-sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h4 style="margin:0; font-weight:800; color:#111827;">Detail Lokasi</h4>
+            <button class="btn-close" onclick="closeSidebar()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="sidebar-body" id="sidebarContent">
+            </div>
+    </div>
 </div>
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-  const dataUrl = "{{ route('petugas.map.data') }}";
-  const detailUrlBase = "{{ url('/petugas/setoran') }}";
+    const dataUrl = "{{ route('petugas.map.data') }}";
+    const detailUrlBase = "{{ url('/petugas/setoran') }}";
 
-  const map = L.map('map').setView([0.5071, 101.4478], 12);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    // Map Init
+    const map = L.map('map', { zoomControl: false }).setView([0.5071, 101.4478], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  const pickupMarkers = new Map(); // id -> marker
+    let pickupMarkers = new Map();
+    let currentFilter = '__all__';
 
-  function colorByStatus(status, isAssignedToMe){
-    const s = String(status||'').toLowerCase();
-    if(isAssignedToMe) return '#22c55e';
-    if(s === 'pending') return '#f59e0b';
-    if(s === 'diproses' || s === 'diambil') return '#3b82f6';
-    if(s === 'selesai') return '#9ca3af';
-    return '#64748b';
-  }
+    // Icons
+    function getIcon(status, isMine) {
+        let color = '#94a3b8'; // Default grey
+        let size = 14;
+        let zIndex = 100;
 
-  function circleIcon(color, isAssignedToMe){
-    const size = isAssignedToMe ? 20 : 16;
-    const borderWidth = isAssignedToMe ? 4 : 3;
-    return L.divIcon({
-      className: "",
-      html: `<div style="width:${size}px;height:${size}px;border-radius:999px;background:${color};
-        border:${borderWidth}px solid rgba(255,255,255,.95);box-shadow:0 10px 24px rgba(0,0,0,.18);"></div>`,
-      iconSize:[size,size], iconAnchor:[size/2,size/2]
-    });
-  }
+        if (isMine) { color = '#22c55e'; size = 20; zIndex = 500; }
+        else if (status === 'pending') { color = '#f59e0b'; }
+        else if (status === 'diproses' || status === 'diambil') { color = '#3b82f6'; }
 
-  function shouldShow(status, filter){
-    if(filter === '__all__') return true;
-    return String(status||'').toLowerCase() === filter;
-  }
-
-  function popupHtml(it){
-    const s = String(it.status||'').toUpperCase();
-    const addr = it.alamat ? it.alamat : '-';
-    const userName = it.user_name ? it.user_name : '-';
-    const isAssigned = it.is_assigned_to_me || false;
-    const assignLabel = isAssigned ? '<span style="background:#22c55e;color:#fff;padding:2px 6px;border-radius:6px;font-size:11px;font-weight:700">ASSIGNED KE SAYA</span>' : '';
-
-    return `
-      <div style="font-family:Arial;min-width:240px">
-        <b>Setoran #${it.id}</b> ${assignLabel}<br>
-        <div style="margin-top:6px"><b>User:</b> ${userName}</div>
-        <div style="margin-top:6px"><b>Status:</b> ${s}</div>
-        <div style="margin-top:6px"><b>Alamat:</b><br>${addr}</div>
-        <div style="margin-top:6px"><b>Koordinat:</b> ${it.lat.toFixed(6)}, ${it.lng.toFixed(6)}</div>
-        <div style="margin-top:10px">
-          <a href="${detailUrlBase}/${it.id}" style="display:inline-block;padding:8px 10px;border:1px solid #333;border-radius:10px;text-decoration:none">Detail</a>
-          <a target="_blank" href="https://www.google.com/maps?q=${it.lat},${it.lng}" style="display:inline-block;padding:8px 10px;border:1px solid #0b6b4d;border-radius:10px;text-decoration:none;margin-left:6px">Maps</a>
-        </div>
-      </div>
-    `;
-  }
-
-  async function refresh(){
-    const filter = document.getElementById('statusFilter').value;
-    const res = await fetch(dataUrl, { cache: "no-store" });
-    const data = await res.json();
-    const items = data.items || [];
-
-    document.getElementById('infoText').textContent =
-      `Total titik jemput: ${items.length} • Realtime update`;
-
-    let bounds = [];
-    const alivePickup = new Set();
-
-    for(const it of items){
-      const ok = shouldShow(it.status, filter);
-      alivePickup.add(it.id);
-
-      const isAssigned = it.is_assigned_to_me || false;
-      const icon = circleIcon(colorByStatus(it.status, isAssigned), isAssigned);
-
-      if(!pickupMarkers.has(it.id)){
-        const m = L.marker([it.lat, it.lng], { icon }).addTo(map);
-        pickupMarkers.set(it.id, m);
-      }else{
-        pickupMarkers.get(it.id).setLatLng([it.lat, it.lng]);
-        pickupMarkers.get(it.id).setIcon(icon);
-      }
-
-      pickupMarkers.get(it.id).bindPopup(popupHtml(it));
-      pickupMarkers.get(it.id).setOpacity(ok ? 1 : 0);
-      if(ok) bounds.push([it.lat, it.lng]);
+        return L.divIcon({
+            className: '',
+            html: `<div style="background:${color}; width:${size}px; height:${size}px; border-radius:50%; border:3px solid #fff; box-shadow:0 4px 10px rgba(0,0,0,0.2);"></div>`,
+            iconSize: [size, size], iconAnchor: [size/2, size/2]
+        });
     }
 
-    for(const [id, m] of pickupMarkers){
-      if(!alivePickup.has(id)){
-        map.removeLayer(m);
-        pickupMarkers.delete(id);
-      }
+    // Logic
+    function setFilter(val, btn) {
+        currentFilter = val;
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        refresh();
     }
 
-    if(bounds.length){
-      map.fitBounds(L.latLngBounds(bounds).pad(0.2));
+    async function refresh() {
+        try {
+            const res = await fetch(dataUrl);
+            const data = await res.json();
+            const items = data.items || [];
+
+            document.getElementById('infoText').innerText = `Total: ${items.length} titik ditemukan`;
+
+            const activeIds = new Set();
+
+            items.forEach(it => {
+                const isMine = it.is_assigned_to_me;
+                const status = String(it.status).toLowerCase();
+
+                // Filter Logic
+                if (currentFilter === 'assigned' && !isMine) return;
+                if (currentFilter === 'pending' && status !== 'pending') return;
+
+                activeIds.add(it.id);
+
+                if (!pickupMarkers.has(it.id)) {
+                    const m = L.marker([it.lat, it.lng], {
+                        icon: getIcon(status, isMine),
+                        zIndexOffset: isMine ? 1000 : 100
+                    }).addTo(map);
+
+                    m.on('click', () => openSidebar(it));
+                    pickupMarkers.set(it.id, m);
+                } else {
+                    pickupMarkers.get(it.id).setLatLng([it.lat, it.lng]);
+                }
+            });
+
+            // Cleanup
+            pickupMarkers.forEach((m, id) => {
+                if (!activeIds.has(id)) {
+                    map.removeLayer(m);
+                    pickupMarkers.delete(id);
+                }
+            });
+
+        } catch (e) { console.error(e); }
     }
-  }
 
-  document.getElementById('statusFilter').addEventListener('change', refresh);
+    function openSidebar(it) {
+        const sidebar = document.getElementById('sidebar');
+        const content = document.getElementById('sidebarContent');
+        const isMine = it.is_assigned_to_me;
 
-  refresh();
-  setInterval(refresh, 2000);
+        let statusBadge = `<span style="background:#f3f4f6; color:#64748b; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase;">${it.status}</span>`;
+
+        if(isMine) statusBadge = `<span style="background:#dcfce7; color:#166534; padding:4px 8px; border-radius:6px; font-size:0.75rem; font-weight:700; text-transform:uppercase;">TUGAS SAYA</span>`;
+
+        content.innerHTML = `
+            <div style="margin-bottom:12px;">${statusBadge}</div>
+            <h3 style="margin:0 0 4px; font-size:1.1rem; color:#111827;">${it.user_name}</h3>
+            <p style="margin:0 0 16px; color:#6b7280; font-size:0.9rem;">${it.alamat || 'Alamat tidak tersedia'}</p>
+
+            <div style="background:#f9fafb; padding:12px; border-radius:8px; font-size:0.85rem; color:#374151;">
+                <strong>Koordinat:</strong><br>
+                ${it.lat.toFixed(6)}, ${it.lng.toFixed(6)}
+            </div>
+
+            <a href="${detailUrlBase}/${it.id}" class="btn-action">
+                Lihat Detail & Aksi
+            </a>
+
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${it.lat},${it.lng}" target="_blank"
+               style="display:block; text-align:center; margin-top:10px; color:#3b82f6; text-decoration:none; font-weight:600; font-size:0.9rem;">
+               <i class="fa-solid fa-location-arrow"></i> Navigasi Google Maps
+            </a>
+        `;
+        sidebar.classList.add('active');
+    }
+
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('active');
+    }
+
+    // Init
+    refresh();
+    setInterval(refresh, 5000);
 </script>
 @endpush

@@ -1,1049 +1,514 @@
 @extends('layouts.admin')
 
-@section('title', 'Edit Kategori Sampah - ' . $item->nama_sampah)
+@section('title', 'Edit Data Sampah')
 
 @push('styles')
-<style>
-    /* ===== FORM PAGE STYLES ===== */
-    .form-page {
-        min-height: calc(100vh - 100px);
-    }
-
-    /* Page Header */
-    .form-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 32px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid var(--line);
-        flex-wrap: wrap;
-        gap: 16px;
-    }
-    
-    .form-header .page-title {
-        font-size: 28px;
-        margin-bottom: 4px;
-        background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-    }
-    
-    .form-header .page-subtitle {
-        font-size: 15px;
-        color: var(--muted);
-        max-width: 600px;
-        line-height: 1.6;
-    }
-
-    /* Back Button */
-    .btn-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 12px 24px;
-        border-radius: var(--radius);
-        background: var(--white);
-        color: var(--ink);
-        font-weight: 600;
-        font-size: 14px;
-        text-decoration: none;
-        border: 1px solid var(--line);
-        transition: var(--transition);
-    }
-    
-    .btn-back:hover {
-        background: var(--hover-bg);
-        border-color: var(--primary);
-        color: var(--primary);
-    }
-
-    /* Error Alert */
-    .alert-error {
-        background: #fef2f2;
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: var(--radius);
-        padding: 20px;
-        margin-bottom: 32px;
-        color: #991b1b;
-        font-weight: 500;
-        animation: slideIn 0.3s ease-out;
-    }
-    
-    .alert-error .alert-title {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 12px;
-        font-weight: 600;
-        font-size: 16px;
-    }
-    
-    .alert-error .alert-title i {
-        color: #dc2626;
-    }
-    
-    .alert-error ul {
-        margin: 0;
-        padding-left: 24px;
-    }
-    
-    .alert-error li {
-        margin-bottom: 6px;
-        font-size: 14px;
-    }
-    
-    .alert-error li:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Success Alert */
-    .alert-success {
-        background: var(--primary-light);
-        border: 1px solid rgba(16, 185, 129, 0.3);
-        border-radius: var(--radius);
-        padding: 16px 20px;
-        margin-bottom: 24px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        color: var(--primary-dark);
-        font-weight: 500;
-        animation: slideIn 0.3s ease-out;
-    }
-    
-    .alert-success i {
-        color: var(--primary);
-        font-size: 18px;
-    }
-
-    /* Form Card */
-    .form-card {
-        background: var(--white);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow-sm);
-        padding: 32px;
-        margin-bottom: 32px;
-    }
-    
-    @media (max-width: 768px) {
-        .form-card {
-            padding: 24px;
+    <style>
+        :root {
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --radius: 16px;
+            --danger: #ef4444;
         }
-    }
 
-    /* Form Grid */
-    .form-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 24px;
-        margin-bottom: 32px;
-    }
-    
-    @media (max-width: 992px) {
+        .form-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 60px;
+        }
+
+        /* ===== HEADER ===== */
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--ink);
+            margin: 0 0 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-subtitle {
+            color: var(--muted);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* ===== LAYOUT GRID ===== */
         .form-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
+            display: grid;
+            grid-template-columns: 2fr 1.2fr;
+            gap: 24px;
         }
-    }
 
-    /* Form Group */
-    .form-group {
-        margin-bottom: 0;
-    }
-    
-    .form-group.full-width {
-        grid-column: 1 / -1;
-    }
-    
-    .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--ink);
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .form-label .required {
-        color: #dc2626;
-        font-weight: 700;
-        margin-left: 2px;
-    }
-    
-    .form-label .optional {
-        font-size: 12px;
-        color: var(--muted);
-        font-weight: 400;
-        margin-left: 8px;
-    }
-
-    /* Form Controls */
-    .form-control {
-        width: 100%;
-        padding: 12px 16px;
-        border: 1px solid var(--line);
-        border-radius: var(--radius-sm);
-        background: var(--white);
-        color: var(--ink);
-        font-size: 15px;
-        font-weight: 500;
-        transition: var(--transition);
-        outline: none;
-    }
-    
-    .form-control:focus {
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-    
-    .form-control::placeholder {
-        color: var(--muted);
-        font-weight: 400;
-    }
-    
-    .form-control[readonly] {
-        background: var(--bg);
-        cursor: not-allowed;
-    }
-    
-    .form-control[disabled] {
-        background: var(--bg);
-        color: var(--muted);
-        cursor: not-allowed;
-    }
-    
-    textarea.form-control {
-        min-height: 120px;
-        resize: vertical;
-        line-height: 1.6;
-    }
-    
-    select.form-control {
-        cursor: pointer;
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%236b7280' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 16px center;
-        padding-right: 40px;
-    }
-
-    /* Form Helper Text */
-    .form-helper {
-        display: block;
-        margin-top: 6px;
-        font-size: 13px;
-        color: var(--muted);
-        line-height: 1.5;
-    }
-    
-    .form-helper.error {
-        color: #dc2626;
-        font-weight: 500;
-    }
-
-    /* Current Image Section */
-    .current-image-section {
-        background: var(--bg);
-        border: 1px solid var(--line);
-        border-radius: var(--radius);
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-    
-    .current-image-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 16px;
-    }
-    
-    .current-image-header i {
-        color: var(--primary);
-        font-size: 18px;
-    }
-    
-    .current-image-header h4 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--ink);
-    }
-    
-    .current-image-content {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-    
-    .current-image-preview {
-        width: 160px;
-        height: 160px;
-        border-radius: var(--radius);
-        border: 1px solid var(--line);
-        background: var(--white);
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .current-image-preview img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .current-image-preview .no-image {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: var(--muted);
-        background: var(--primary-light);
-    }
-    
-    .current-image-preview .no-image i {
-        font-size: 32px;
-        margin-bottom: 8px;
-        color: var(--primary);
-    }
-    
-    .current-image-preview .no-image span {
-        font-size: 14px;
-        font-weight: 500;
-    }
-    
-    .current-image-info {
-        flex: 1;
-        min-width: 300px;
-    }
-    
-    .current-image-info .info-item {
-        margin-bottom: 12px;
-        font-size: 14px;
-    }
-    
-    .current-image-info .info-label {
-        font-weight: 600;
-        color: var(--ink);
-        margin-bottom: 4px;
-    }
-    
-    .current-image-info .info-value {
-        color: var(--muted);
-    }
-
-    /* File Upload */
-    .file-upload {
-        position: relative;
-        margin-top: 8px;
-    }
-    
-    .file-input {
-        width: 100%;
-        padding: 12px 16px;
-        border: 2px dashed var(--line);
-        border-radius: var(--radius-sm);
-        background: var(--bg);
-        color: var(--ink);
-        font-size: 15px;
-        cursor: pointer;
-        transition: var(--transition);
-        outline: none;
-    }
-    
-    .file-input:hover {
-        border-color: var(--primary);
-        background: var(--primary-light);
-    }
-    
-    .file-input:focus {
-        border-color: var(--primary);
-        border-style: solid;
-        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-    
-    .file-input::file-selector-button {
-        padding: 8px 16px;
-        margin-right: 16px;
-        border: 1px solid var(--primary);
-        border-radius: var(--radius-sm);
-        background: var(--primary);
-        color: var(--white);
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        transition: var(--transition);
-    }
-    
-    .file-input::file-selector-button:hover {
-        background: var(--primary-dark);
-        border-color: var(--primary-dark);
-    }
-
-    /* New Image Preview */
-    .new-image-preview {
-        margin-top: 20px;
-    }
-    
-    .preview-container {
-        display: flex;
-        align-items: flex-start;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-    
-    .preview-image {
-        width: 160px;
-        height: 160px;
-        border-radius: var(--radius);
-        border: 1px solid var(--line);
-        background: var(--bg);
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .preview-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: none;
-    }
-    
-    .preview-image .no-preview {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: var(--muted);
-        background: var(--primary-light);
-    }
-    
-    .preview-image .no-preview i {
-        font-size: 32px;
-        margin-bottom: 8px;
-        color: var(--primary);
-    }
-    
-    .preview-image .no-preview span {
-        font-size: 14px;
-        font-weight: 500;
-    }
-
-    /* Form Actions */
-    .form-actions {
-        display: flex;
-        gap: 16px;
-        padding-top: 32px;
-        border-top: 1px solid var(--line);
-        flex-wrap: wrap;
-    }
-    
-    .btn-update {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 32px;
-        border-radius: var(--radius);
-        background: var(--primary);
-        color: var(--white);
-        font-weight: 600;
-        font-size: 16px;
-        text-decoration: none;
-        border: 1px solid var(--primary);
-        transition: var(--transition);
-        cursor: pointer;
-        box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
-    }
-    
-    .btn-update:hover {
-        background: var(--primary-dark);
-        border-color: var(--primary-dark);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
-    }
-    
-    .btn-update:active {
-        transform: translateY(0);
-    }
-    
-    .btn-cancel {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 32px;
-        border-radius: var(--radius);
-        background: var(--white);
-        color: var(--ink);
-        font-weight: 600;
-        font-size: 16px;
-        text-decoration: none;
-        border: 1px solid var(--line);
-        transition: var(--transition);
-        cursor: pointer;
-    }
-    
-    .btn-cancel:hover {
-        background: var(--hover-bg);
-        border-color: var(--primary);
-        color: var(--primary);
-    }
-    
-    .btn-delete {
-        display: inline-flex;
-        align-items: center;
-        gap: 10px;
-        padding: 14px 32px;
-        border-radius: var(--radius);
-        background: #fef2f2;
-        color: #dc2626;
-        font-weight: 600;
-        font-size: 16px;
-        text-decoration: none;
-        border: 1px solid #fecaca;
-        transition: var(--transition);
-        cursor: pointer;
-    }
-    
-    .btn-delete:hover {
-        background: #dc2626;
-        color: white;
-        border-color: #dc2626;
-    }
-
-    /* Loading State */
-    .btn-loading {
-        position: relative;
-        color: transparent !important;
-    }
-    
-    .btn-loading::after {
-        content: "";
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        top: 50%;
-        left: 50%;
-        margin-left: -10px;
-        margin-top: -10px;
-        border: 2px solid var(--white);
-        border-radius: 50%;
-        border-top-color: transparent;
-        animation: spin 0.8s linear infinite;
-    }
-    
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    /* Responsive Adjustments */
-    @media (max-width: 768px) {
-        .form-header {
-            flex-direction: column;
-            align-items: stretch;
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
         }
-        
-        .btn-back {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .form-actions {
-            flex-direction: column;
-        }
-        
-        .btn-update,
-        .btn-cancel,
-        .btn-delete {
-            width: 100%;
-            justify-content: center;
-        }
-        
-        .current-image-content,
-        .preview-container {
-            flex-direction: column;
-        }
-        
-        .current-image-preview,
-        .preview-image {
-            width: 100%;
-            height: 200px;
-        }
-        
-        .current-image-info,
-        .preview-info {
-            min-width: 100%;
-        }
-    }
 
-    @media (max-width: 576px) {
+        /* ===== CARD STYLE ===== */
         .form-card {
-            padding: 20px;
-            margin-left: -16px;
-            margin-right: -16px;
-            border-radius: 0;
-            border-left: none;
-            border-right: none;
+            background: var(--card);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--line);
+            overflow: hidden;
+            height: fit-content;
         }
-        
-        .form-header .page-title {
-            font-size: 24px;
+
+        .card-body {
+            padding: 30px;
         }
-        
-        .btn-update,
-        .btn-cancel,
-        .btn-delete {
+
+        .card-header {
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+            font-weight: 800;
+            color: var(--ink);
+            font-size: 1rem;
+        }
+
+        /* ===== FORM ELEMENTS ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        label span.req {
+            color: var(--danger);
+            margin-left: 3px;
+        }
+
+        .form-control,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            font-size: 0.95rem;
+            color: var(--ink);
+            font-weight: 600;
+            transition: .2s;
+            background: #fcfcfc;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            background: #fff;
+            border-color: var(--brand);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            outline: none;
+        }
+
+        .form-control::placeholder {
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        /* Input Group (Rp) */
+        .input-group {
+            position: relative;
+        }
+
+        .input-prefix {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .form-control.has-prefix {
+            padding-left: 45px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--line);
+            border-radius: 16px;
+            padding: 0;
+            text-align: center;
+            cursor: pointer;
+            transition: .2s;
+            background: #f8fafc;
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-area:hover {
+            border-color: var(--brand);
+            background: #ecfdf5;
+        }
+
+        .upload-content {
+            padding: 30px;
+            pointer-events: none;
+            transition: .2s;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .upload-hint {
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        /* Image Preview Styling */
+        .preview-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            transition: 0.3s;
+        }
+
+        /* Saat ada gambar, konten placeholder hilang */
+        .upload-area.has-file .upload-content {
+            opacity: 0;
+        }
+
+        .upload-area.has-file {
+            border-style: solid;
+            border-color: var(--line);
+        }
+
+        .overlay-change {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            opacity: 0;
+            transition: 0.2s;
+            pointer-events: none;
+        }
+
+        .upload-area:hover .overlay-change {
+            opacity: 1;
+        }
+
+        /* Actions Footer */
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        .action-right {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
             padding: 12px 24px;
-            font-size: 15px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: .2s;
+            text-decoration: none;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
-    }
-</style>
+
+        .btn-secondary {
+            background: #fff;
+            border-color: var(--line);
+            color: var(--muted);
+        }
+
+        .btn-secondary:hover {
+            background: #f1f5f9;
+            color: var(--ink);
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: #fff;
+            border-color: var(--brand);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-danger-soft {
+            background: #fef2f2;
+            color: #ef4444;
+            border-color: #fee2e2;
+        }
+
+        .btn-danger-soft:hover {
+            background: #ef4444;
+            color: #fff;
+            border-color: #ef4444;
+        }
+
+        .invalid-feedback {
+            color: var(--danger);
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        /* Loading */
+        .spinner {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #fff;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            animation: rot 1s linear infinite;
+            display: none;
+        }
+
+        .btn-loading .spinner {
+            display: inline-block;
+        }
+
+        .btn-loading span {
+            display: none;
+        }
+
+        @keyframes rot {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="form-page">
-    <!-- Page Header -->
-    <div class="form-header">
-        <div>
-            <h1 class="page-title">Edit Kategori Sampah</h1>
-            <p class="page-subtitle">Perbarui informasi kategori sampah "{{ $item->nama_sampah }}".</p>
-        </div>
-        
-        <a href="{{ route('kategori_sampah.index') }}" class="btn-back">
-            <i class="fa-solid fa-arrow-left"></i>
-            <span>Kembali ke Daftar</span>
-        </a>
-    </div>
+    <div class="form-container">
 
-    <!-- Success Message -->
-    @if(session('success'))
-        <div class="alert-success">
-            <i class="fa-solid fa-circle-check"></i>
-            <span>{{ session('success') }}</span>
+        <div class="page-header">
+            <h1 class="page-title">Edit Data Sampah</h1>
+            <p class="page-subtitle">Perbarui informasi "{{ $item->nama_sampah }}".</p>
         </div>
-    @endif
 
-    <!-- Error Alert -->
-    @if ($errors->any())
-        <div class="alert-error">
-            <div class="alert-title">
-                <i class="fa-solid fa-exclamation-triangle"></i>
-                <span>Terjadi Kesalahan</span>
-            </div>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <!-- Form Card -->
-    <div class="form-card">
-        <form method="POST" action="{{ route('kategori_sampah.update', $item->id) }}" enctype="multipart/form-data" id="editForm">
+        <form action="{{ route('kategori_sampah.update', $item->id) }}" method="POST" enctype="multipart/form-data"
+            id="mainForm">
             @csrf
             @method('PUT')
 
             <div class="form-grid">
-                <!-- Nama Sampah -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Nama Sampah</span>
-                        <span class="required">*</span>
-                    </label>
-                    <input type="text" 
-                           name="nama_sampah" 
-                           class="form-control" 
-                           value="{{ old('nama_sampah', $item->nama_sampah) }}" 
-                           placeholder="Contoh: Botol Plastik PET" 
-                           required
-                           autofocus>
-                    @error('nama_sampah')
-                        <span class="form-helper error">{{ $message }}</span>
-                    @enderror
-                </div>
 
-                <!-- Kategori Master -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Kategori Master</span>
-                        <span class="required">*</span>
-                    </label>
-                    <select name="master_kategori_id" class="form-control" required>
-                        <option value="" disabled>-- Pilih Kategori --</option>
-                        @foreach($kategoriMaster as $kategori)
-                            <option value="{{ $kategori->id }}" 
-                                {{ old('master_kategori_id', $item->master_kategori_id) == $kategori->id ? 'selected' : '' }}>
-                                {{ $kategori->nama_kategori }}
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('master_kategori_id')
-                        <span class="form-helper error">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Harga Satuan -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Harga Satuan</span>
-                        <span class="optional">(Opsional)</span>
-                    </label>
-                    <div style="position: relative;">
-                        <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600;">Rp</span>
-                        <input type="number" 
-                               name="harga_satuan" 
-                               class="form-control" 
-                               value="{{ old('harga_satuan', $item->harga_satuan) }}" 
-                               placeholder="0"
-                               min="0"
-                               step="100"
-                               style="padding-left: 40px;">
-                    </div>
-                    <span class="form-helper">Harga per satuan dalam Rupiah. Kosongkan jika belum ditentukan.</span>
-                    @error('harga_satuan')
-                        <span class="form-helper error">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Jenis Satuan -->
-                <div class="form-group">
-                    <label class="form-label">
-                        <span>Jenis Satuan</span>
-                        <span class="optional">(Opsional)</span>
-                    </label>
-                    <input type="text" 
-                           name="jenis_satuan" 
-                           class="form-control" 
-                           value="{{ old('jenis_satuan', $item->jenis_satuan) }}" 
-                           placeholder="Contoh: kg, liter, pcs">
-                    <span class="form-helper">Satuan pengukuran untuk sampah ini.</span>
-                    @error('jenis_satuan')
-                        <span class="form-helper error">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Deskripsi -->
-                <div class="form-group full-width">
-                    <label class="form-label">
-                        <span>Deskripsi</span>
-                        <span class="optional">(Opsional)</span>
-                    </label>
-                    <textarea name="deskripsi" 
-                              class="form-control" 
-                              rows="4" 
-                              placeholder="Tambahkan deskripsi atau keterangan tentang sampah ini...">{{ old('deskripsi', $item->deskripsi) }}</textarea>
-                    <span class="form-helper">Deskripsi akan membantu pengguna memahami jenis sampah ini.</span>
-                    @error('deskripsi')
-                        <span class="form-helper error">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <!-- Current Image -->
-                @if($item->gambar_sampah)
-                <div class="form-group full-width">
-                    <div class="current-image-section">
-                        <div class="current-image-header">
-                            <i class="fa-solid fa-image"></i>
-                            <h4>Gambar Saat Ini</h4>
+                {{-- KOLOM KIRI: INFO UTAMA --}}
+                <div class="form-card">
+                    <div class="card-header">Informasi Dasar</div>
+                    <div class="card-body">
+                        {{-- Nama Sampah --}}
+                        <div class="form-group">
+                            <label>Nama Sampah <span class="req">*</span></label>
+                            <input type="text" name="nama_sampah"
+                                class="form-control @error('nama_sampah') is-invalid @enderror"
+                                value="{{ old('nama_sampah', $item->nama_sampah) }}" required>
+                            @error('nama_sampah')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
-                        
-                        <div class="current-image-content">
-                            <div class="current-image-preview">
-                                <img src="{{ asset('storage/'.$item->gambar_sampah) }}" 
-                                     alt="{{ $item->nama_sampah }}"
-                                     loading="lazy">
-                            </div>
-                            
-                            <div class="current-image-info">
-                                <div class="info-item">
-                                    <div class="info-label">Status Gambar</div>
-                                    <div class="info-value">
-                                        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--primary-light); color: var(--primary-dark); border-radius: 20px; font-weight: 600; font-size: 13px;">
-                                            <i class="fa-solid fa-check-circle"></i>
-                                            <span>Gambar tersimpan</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="info-item">
-                                    <div class="info-label">Panduan</div>
-                                    <div class="info-value">
-                                        <ul style="margin: 0; padding-left: 20px; color: var(--muted);">
-                                            <li>Upload gambar baru untuk mengganti gambar saat ini</li>
-                                            <li>Gambar lama akan otomatis dihapus</li>
-                                            <li>Kosongkan jika ingin menghapus gambar</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+
+                        {{-- Kategori Master --}}
+                        <div class="form-group">
+                            <label>Kategori Induk <span class="req">*</span></label>
+                            <select name="master_kategori_id"
+                                class="form-select @error('master_kategori_id') is-invalid @enderror" required>
+                                <option value="">-- Pilih Kategori --</option>
+                                @foreach ($kategoriMaster as $km)
+                                    <option value="{{ $km->id }}"
+                                        {{ old('master_kategori_id', $item->master_kategori_id) == $km->id ? 'selected' : '' }}>
+                                        {{ $km->nama_kategori }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('master_kategori_id')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        {{-- Deskripsi --}}
+                        <div class="form-group">
+                            <label>Deskripsi <span style="font-weight:400; color:var(--muted)">(Opsional)</span></label>
+                            <textarea name="deskripsi" class="form-control" rows="4">{{ old('deskripsi', $item->deskripsi) }}</textarea>
                         </div>
                     </div>
                 </div>
-                @endif
 
-                <!-- Gambar Sampah Baru -->
-                <div class="form-group full-width">
-                    <label class="form-label">
-                        <span>{{ $item->gambar_sampah ? 'Gambar Baru' : 'Gambar Sampah' }}</span>
-                        <span class="optional">(Opsional)</span>
-                    </label>
-                    
-                    <input type="file" 
-                           name="gambar_sampah" 
-                           id="gambar_sampah" 
-                           class="file-input" 
-                           accept="image/*"
-                           onchange="previewImage(event)">
-                    
-                    <span class="form-helper">
-                        @if($item->gambar_sampah)
-                            Upload gambar baru untuk mengganti. Format: JPG, PNG, WEBP. Maksimal ukuran: 2MB.
-                        @else
-                            Tambahkan gambar sampah. Format: JPG, PNG, WEBP. Maksimal ukuran: 2MB.
-                        @endif
-                    </span>
-                    @error('gambar_sampah')
-                        <span class="form-helper error">{{ $message }}</span>
-                    @enderror
-                    
-                    <!-- New Image Preview -->
-                    <div class="new-image-preview">
-                        <div class="preview-container">
-                            <div class="preview-image" id="imagePreview">
-                                <div class="no-preview">
-                                    <i class="fa-solid fa-image"></i>
-                                    <span>Preview Gambar Baru</span>
+                {{-- KOLOM KANAN: HARGA & GAMBAR --}}
+                <div class="right-col">
+
+                    {{-- Card Harga --}}
+                    <div class="form-card" style="margin-bottom: 24px;">
+                        <div class="card-header">Penetapan Harga</div>
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label>Harga Satuan</label>
+                                <div class="input-group">
+                                    <span class="input-prefix">Rp</span>
+                                    <input type="number" name="harga_satuan" class="form-control has-prefix"
+                                        value="{{ old('harga_satuan', $item->harga_satuan) }}">
                                 </div>
-                                <img id="previewImg" alt="Preview gambar baru">
                             </div>
-                            
-                            <div class="preview-info">
-                                <div class="info-item">
-                                    <div class="info-label">Informasi Gambar Baru</div>
-                                    <div class="info-value">
-                                        <div id="imageInfo">Pilih file untuk melihat informasi</div>
-                                    </div>
-                                </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>Satuan (Unit)</label>
+                                <input type="text" name="jenis_satuan" class="form-control"
+                                    value="{{ old('jenis_satuan', $item->jenis_satuan) }}">
                             </div>
                         </div>
                     </div>
+
+                    {{-- Card Gambar --}}
+                    <div class="form-card">
+                        <div class="card-header">Gambar Referensi</div>
+                        <div class="card-body">
+                            {{-- Logic class 'has-file' jika ada gambar lama --}}
+                            <div class="upload-area {{ $item->gambar_sampah ? 'has-file' : '' }}" id="uploadArea">
+                                <input type="file" name="gambar_sampah" id="fileInput" class="file-input"
+                                    accept="image/*">
+
+                                {{-- Placeholder Content --}}
+                                <div class="upload-content">
+                                    <div class="upload-icon"><i class="fa-regular fa-image"></i></div>
+                                    <div class="upload-text">Upload Gambar Baru</div>
+                                    <div class="upload-hint">Klik untuk mengganti gambar</div>
+                                </div>
+
+                                {{-- Preview Image (Tampilkan gambar lama jika ada) --}}
+                                <img id="preview" class="preview-img"
+                                    src="{{ $item->gambar_sampah ? asset('storage/' . $item->gambar_sampah) : '' }}"
+                                    style="{{ $item->gambar_sampah ? 'display:block' : 'display:none' }}">
+
+                                {{-- Overlay saat hover di gambar yg ada --}}
+                                <div class="overlay-change">
+                                    <i class="fa-solid fa-camera" style="font-size:1.5rem; margin-bottom:8px"></i>
+                                    <span>Ganti Gambar</span>
+                                </div>
+                            </div>
+                            @error('gambar_sampah')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
-            <!-- Form Actions -->
+            {{-- ACTIONS --}}
             <div class="form-actions">
-                <button type="submit" class="btn-update" id="submitBtn">
-                    <i class="fa-solid fa-save"></i>
-                    <span>Update Data</span>
+                {{-- Tombol Delete Terpisah (Menggunakan form submit terpisah di script jika perlu, atau link manual) --}}
+                <button type="button" class="btn btn-danger-soft" onclick="deleteItem()">
+                    <i class="fa-solid fa-trash"></i> Hapus Data
                 </button>
-                
-                <button type="button" class="btn-cancel" onclick="window.location.href='{{ route('kategori_sampah.index') }}'">
-                    <i class="fa-solid fa-times"></i>
-                    <span>Batalkan</span>
-                </button>
-                
-                <button type="button" class="btn-delete" onclick="deleteItem()">
-                    <i class="fa-solid fa-trash"></i>
-                    <span>Hapus Data</span>
-                </button>
+
+                <div class="action-right">
+                    <a href="{{ route('kategori_sampah.index') }}" class="btn btn-secondary">Batal</a>
+                    <button type="submit" class="btn btn-primary" id="btnSubmit">
+                        <div class="spinner"></div> <span>Simpan Perubahan</span>
+                    </button>
+                </div>
             </div>
+
         </form>
+
+        {{-- Hidden Delete Form --}}
+        <form id="deleteForm" action="{{ route('kategori_sampah.destroy', $item->id) }}" method="POST"
+            style="display:none;">
+            @csrf @method('DELETE')
+        </form>
+
     </div>
-</div>
 @endsection
 
 @push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('editForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const fileInput = document.getElementById('gambar_sampah');
-        const previewImg = document.getElementById('previewImg');
-        const imagePreview = document.getElementById('imagePreview');
-        const noPreview = imagePreview.querySelector('.no-preview');
-        const imageInfo = document.getElementById('imageInfo');
-        
-        // Form submission handler
-        form.addEventListener('submit', function(e) {
-            const submitBtn = this.querySelector('#submitBtn');
-            submitBtn.classList.add('btn-loading');
-            submitBtn.disabled = true;
-        });
-        
-        // Image preview function
-        window.previewImage = function(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                resetPreview();
-                return;
-            }
-            
-            // Check file size (max 2MB)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('Ukuran file terlalu besar. Maksimal 2MB.');
-                resetPreview();
-                fileInput.value = '';
-                return;
-            }
-            
-            // Check file type
-            if (!file.type.match('image.*')) {
-                alert('Hanya file gambar yang diperbolehkan.');
-                resetPreview();
-                fileInput.value = '';
-                return;
-            }
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                previewImg.style.display = 'block';
-                noPreview.style.display = 'none';
-                
-                // Update image info
-                const sizeInKB = (file.size / 1024).toFixed(2);
-                imageInfo.innerHTML = `
-                    <div><strong>Nama:</strong> ${file.name}</div>
-                    <div><strong>Ukuran:</strong> ${sizeInKB} KB</div>
-                    <div><strong>Tipe:</strong> ${file.type}</div>
-                    <div style="margin-top: 8px; padding: 8px; background: var(--primary-light); border-radius: 8px; color: var(--primary-dark); font-weight: 600;">
-                        <i class="fa-solid fa-info-circle"></i> Gambar ini akan mengganti gambar saat ini
-                    </div>
-                `;
-            };
-            reader.readAsDataURL(file);
-        };
-        
-        function resetPreview() {
-            previewImg.src = '';
-            previewImg.style.display = 'none';
-            noPreview.style.display = 'flex';
-            imageInfo.textContent = 'Pilih file untuk melihat informasi';
-        }
-        
-        // Auto-focus first field
-        const firstField = form.querySelector('input, select, textarea');
-        if (firstField) {
-            setTimeout(() => firstField.focus(), 100);
-        }
-        
-        // Real-time validation for numeric fields
-        const hargaInput = document.querySelector('input[name="harga_satuan"]');
-        if (hargaInput) {
-            hargaInput.addEventListener('input', function() {
-                let value = this.value;
-                // Remove any non-numeric characters except decimal point
-                value = value.replace(/[^\d.]/g, '');
-                // Ensure only one decimal point
-                const parts = value.split('.');
-                if (parts.length > 2) {
-                    value = parts[0] + '.' + parts.slice(1).join('');
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const uploadArea = document.getElementById('uploadArea');
+        const form = document.getElementById('mainForm');
+        const btnSubmit = document.getElementById('btnSubmit');
+
+        // Image Preview Logic
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    uploadArea.classList.add('has-file');
                 }
-                this.value = value;
-            });
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Delete Confirmation
+        function deleteItem() {
+            if (confirm('Yakin ingin menghapus data ini secara permanen?')) {
+                document.getElementById('deleteForm').submit();
+            }
         }
-        
-        // Character counter for textarea
-        const textarea = document.querySelector('textarea[name="deskripsi"]');
-        if (textarea) {
-            const counter = document.createElement('div');
-            counter.className = 'form-helper';
-            counter.style.textAlign = 'right';
-            counter.textContent = `${textarea.value.length}/500 karakter`;
-            textarea.parentNode.insertBefore(counter, textarea.nextSibling);
-            
-            textarea.addEventListener('input', function() {
-                const length = this.value.length;
-                counter.textContent = `${length}/500 karakter`;
-                counter.style.color = length > 500 ? '#dc2626' : 'var(--muted)';
-            });
-        }
-        
-        // Keyboard shortcuts
-        document.addEventListener('keydown', function(e) {
-            // Ctrl/Cmd + S to save
-            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-                e.preventDefault();
-                submitBtn.click();
-            }
-            
-            // Escape to cancel
-            if (e.key === 'Escape') {
-                const cancelBtn = document.querySelector('.btn-cancel');
-                if (cancelBtn) {
-                    cancelBtn.click();
-                }
+
+        // Submit Loading
+        form.addEventListener('submit', function() {
+            if (form.checkValidity()) {
+                btnSubmit.classList.add('btn-loading');
+                btnSubmit.setAttribute('disabled', true);
             }
         });
-        
-        // Confirm before leaving page if form has changes
-        let formChanged = false;
-        const formInputs = form.querySelectorAll('input, select, textarea');
-        formInputs.forEach(input => {
-            const originalValue = input.value;
-            input.addEventListener('input', () => {
-                formChanged = true;
-            });
-            input.addEventListener('change', () => {
-                formChanged = true;
-            });
-        });
-        
-        window.addEventListener('beforeunload', function(e) {
-            if (formChanged && !submitBtn.classList.contains('btn-loading')) {
-                e.preventDefault();
-                e.returnValue = 'Perubahan yang belum disimpan akan hilang. Yakin ingin meninggalkan halaman?';
-                return e.returnValue;
-            }
-        });
-        
-        // Reset formChanged on submit
-        form.addEventListener('submit', () => {
-            formChanged = false;
-        });
-        
-        // Auto-hide success message after 5 seconds
-        setTimeout(() => {
-            const successAlert = document.querySelector('.alert-success');
-            if (successAlert) {
-                successAlert.style.transition = 'opacity 0.5s ease';
-                successAlert.style.opacity = '0';
-                setTimeout(() => successAlert.remove(), 500);
-            }
-        }, 5000);
-    });
-    
-    // Delete item function
-    function deleteItem() {
-        if (confirm('Apakah Anda yakin ingin menghapus kategori sampah ini? Tindakan ini tidak dapat dibatalkan.')) {
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route("kategori_sampah.destroy", $item->id) }}';
-            
-            const csrfToken = document.createElement('input');
-            csrfToken.type = 'hidden';
-            csrfToken.name = '_token';
-            csrfToken.value = '{{ csrf_token() }}';
-            
-            const method = document.createElement('input');
-            method.type = 'hidden';
-            method.name = '_method';
-            method.value = 'DELETE';
-            
-            form.appendChild(csrfToken);
-            form.appendChild(method);
-            document.body.appendChild(form);
-            form.submit();
-        }
-    }
-</script>
+    </script>
 @endpush
