@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 use App\Models\KategoriSampah;
 use App\Models\SetoranSampah;
 use App\Models\SetoranSampahDetail;
+use App\Models\User;
+use App\Notifications\SetoranBaruNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class SetoranSampahController extends Controller
 {
@@ -140,7 +143,6 @@ class SetoranSampahController extends Controller
             'longitude'                  => ['nullable', 'numeric'],
             'jadwal_jemput'              => ['nullable', 'date'],
             'catatan'                    => ['nullable', 'string'],
-
             'items'                      => ['required', 'array', 'min:1'],
             'items.*.kategori_sampah_id' => ['required', 'exists:kategori_sampah,id'],
             'items.*.jumlah'             => ['required', 'numeric', 'min:0.01'],
@@ -155,7 +157,7 @@ class SetoranSampahController extends Controller
             }
         }
 
-        return DB::transaction(function () use ($data, $userId) {
+        $setoran = DB::transaction(function () use ($data, $userId) {
 
             $setoran = SetoranSampah::create([
                 'user_id'        => $userId,
@@ -194,9 +196,22 @@ class SetoranSampahController extends Controller
 
             $setoran->update(['estimasi_total' => $estimasiTotal]);
 
-            return redirect()->route('user.setoran.index')
-                ->with('success', 'Setoran berhasil dibuat.');
+            return $setoran;
+
+            // return redirect()->route('user.setoran.index')
+            //     ->with('success', 'Setoran berhasil dibuat.');
         });
+
+        if ($setoran->metode === 'jemput') {
+            $petugasList = User::where('role', 'petugas')->get();
+
+            if ($petugasList->count() > 0) {
+                Notification::send($petugasList, new SetoranBaruNotification($setoran));
+            }
+        }
+
+        return redirect()->route('user.setoran.index')
+            ->with('success', 'Setoran berhasil dibuat.');
     }
 
     // =========================

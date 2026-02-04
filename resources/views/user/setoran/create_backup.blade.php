@@ -51,20 +51,33 @@
 
         /* ===== MODERN HERO HEADER ===== */
         .page-header {
+            /* Gradient yang lebih dalam & rich */
             background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+
+            /* Tambahkan tekstur dot halus agar tidak flat */
             background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
                 linear-gradient(135deg, #10b981 0%, #047857 100%);
             background-size: 24px 24px, 100% 100%;
+
+            /* Padding diperbesar: Atas 40px, Bawah 90px (untuk ruang overlap) */
             padding: 40px 0 90px;
+
             color: #fff;
             position: relative;
+
+            /* Lengkungan lebih ekstrem dan smooth */
             border-radius: 0 0 50px 50px;
+
+            /* Shadow lembut untuk depth */
             box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+
+            /* Overlap: Kartu di bawahnya akan naik 60px menutupi header ini */
             margin-bottom: -60px;
             z-index: 1;
             overflow: hidden;
         }
 
+        /* Dekorasi Circle (Glassmorphism) - Diperbesar & Dipertajam */
         .page-header::before {
             content: "";
             position: absolute;
@@ -100,6 +113,7 @@
         .title {
             margin: 0;
             font-size: 1.75rem;
+            /* Font lebih besar sedikit */
             font-weight: 800;
             display: flex;
             align-items: center;
@@ -115,12 +129,15 @@
             line-height: 1.6;
             font-weight: 500;
             color: #ecfdf5;
+            /* Warna putih kehijauan agar soft */
         }
 
         /* ===== CARD & LAYOUT ===== */
         .page {
             padding-bottom: 100px;
         }
+
+        /* Space untuk fixed footer */
 
         .main-card {
             background: var(--card);
@@ -391,7 +408,7 @@
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
-        /* ===== ACTION BAR ===== */
+        /* ===== LEGACY ACTION BAR (FIXED BOTTOM) ===== */
         .actionbar {
             position: fixed;
             left: 0;
@@ -444,20 +461,18 @@
                             <div>
                                 <label><i class="fa-solid fa-truck-fast"></i> Metode Penyerahan *</label>
                                 <select name="metode" id="metodeSelect" required>
-                                    <option value="antar" {{ old('metode', 'antar') == 'antar' ? 'selected' : '' }}>
-                                        Saya Antar Sendiri
-                                    </option>
-                                    <option value="jemput" {{ old('metode') == 'jemput' ? 'selected' : '' }}>
-                                        Petugas Jemput ke Lokasi
-                                    </option>
+                                    <option value="antar" {{ old('metode', 'antar') == 'antar' ? 'selected' : '' }}>Saya
+                                        Antar Sendiri</option>
+                                    <option value="jemput" {{ old('metode') == 'jemput' ? 'selected' : '' }}>Petugas Jemput
+                                        ke Lokasi</option>
                                 </select>
                             </div>
                             <div>
                                 <label><i class="fa-regular fa-calendar-check"></i> Jadwal *</label>
                                 <div class="grid2" style="gap: 10px;">
                                     <input type="date" id="ui_tgl_jemput" min="{{ date('Y-m-d') }}"
-                                        value="{{ date('Y-m-d') }}" required>
-                                    <select id="ui_slot_waktu" required>
+                                        value="{{ date('Y-m-d') }}">
+                                    <select id="ui_slot_waktu">
                                         <option value="08:00">Pagi (08:00 - 10:00)</option>
                                         <option value="10:00">Siang (10:00 - 12:00)</option>
                                         <option value="13:00">Sore (13:00 - 15:00)</option>
@@ -495,7 +510,8 @@
 
                             <div class="row">
                                 <label>Alamat Lengkap / Patokan *</label>
-                                <textarea name="alamat" id="alamatInput" rows="2" placeholder="Contoh: Pagar hitam, samping warung bakso...">{{ old('alamat') }}</textarea>
+                                <textarea name="alamat" id="alamatInput" rows="2" placeholder="Contoh: Pagar hitam, samping warung bakso..."
+                                    required>{{ old('alamat') }}</textarea>
                             </div>
                             <input type="hidden" name="latitude" id="latInput">
                             <input type="hidden" name="longitude" id="lngInput">
@@ -567,22 +583,20 @@
         const rupiah = (n) => new Intl.NumberFormat('id-ID').format(n);
 
         // --- ITEM LOGIC ---
-        function buildSelect(name, selectedId = null) {
+        function buildSelect(name) {
             let html = `<select name="${name}" onchange="recalc()" required><option value="">-- Pilih Sampah --</option>`;
             kategoriData.forEach(k => {
-                const isSelected = (k.id == selectedId) ? 'selected' : '';
                 html +=
-                    `<option value="${k.id}" data-harga="${k.harga}" data-satuan="${k.satuan}" ${isSelected}>${k.nama}</option>`;
+                    `<option value="${k.id}" data-harga="${k.harga}" data-satuan="${k.satuan}">${k.nama}</option>`;
             });
             return html + `</select>`;
         }
 
-        // Modified addRow to accept pre-selected item
-        function addRow(selectedItemId = null) {
+        function addRow() {
             const tbody = document.getElementById('itemsBody');
             const tr = document.createElement('tr');
             tr.innerHTML = `
-            <td>${buildSelect(`items[${rowIndex}][kategori_sampah_id]`, selectedItemId)}</td>
+            <td>${buildSelect(`items[${rowIndex}][kategori_sampah_id]`)}</td>
             <td><input type="number" name="items[${rowIndex}][jumlah]" step="0.01" min="0.01" value="1" oninput="recalc()" required placeholder="0"></td>
             <td class="satuanCell text-muted" style="text-align:center">-</td>
             <td class="hargaCell text-muted">-</td>
@@ -613,7 +627,7 @@
             document.getElementById('grandTotal').innerText = rupiah(grand);
         }
 
-        // --- MAP & GPS LOGIC ---
+        // --- MAP & GPS LOGIC (Auto Fill) ---
         let map, marker;
         const latInput = document.getElementById('latInput'),
             lngInput = document.getElementById('lngInput');
@@ -621,26 +635,9 @@
             lngView = document.getElementById('lngView');
         const locStatus = document.getElementById('locStatus'),
             alamatInput = document.getElementById('alamatInput');
-        const metodeSelect = document.getElementById('metodeSelect');
-        const jemputFields = document.getElementById('jemputFields');
-
-        // Logic Toggle Metode (Penting: Handle Required Attribute)
-        function toggleMetode() {
-            const isJemput = metodeSelect.value === 'jemput';
-            jemputFields.style.display = isJemput ? 'block' : 'none';
-
-            if (isJemput) {
-                alamatInput.setAttribute('required', 'required');
-                // Render map correctly after showing
-                setTimeout(() => {
-                    if (map) map.invalidateSize();
-                }, 300);
-            } else {
-                alamatInput.removeAttribute('required');
-            }
-        }
 
         function initMap() {
+            // Default View: Monas Jakarta (bisa diubah ke Riau sesuai kebutuhan projectmu)
             map = L.map('map', {
                 scrollWheelZoom: false
             }).setView([0.5071, 101.4478], 13);
@@ -648,6 +645,7 @@
                 attribution: '© OSM'
             }).addTo(map);
 
+            // Manual Click
             map.on('click', e => setCoordinate(e.latlng.lat, e.latlng.lng, 'Titik dipilih manual.', false));
         }
 
@@ -661,6 +659,7 @@
                 marker = L.marker([lat, lng], {
                     draggable: true
                 }).addTo(map);
+                // Drag marker tidak auto-fill alamat (takut menimpa editan user), kecuali user minta
                 marker.on('dragend', e => setCoordinate(e.target.getLatLng().lat, e.target.getLatLng().lng,
                     'Lokasi digeser.', false));
             } else {
@@ -680,11 +679,11 @@
             try {
                 const res = await fetch(
                     `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=id`
-                    );
+                );
                 const data = await res.json();
 
+                // Logic: Auto fill hanya jika tombol GPS ditekan (forceFill) atau field alamat masih kosong/sedikit
                 if (data.display_name) {
-                    // Isi alamat jika user minta GPS (forceFill) atau jika field alamat masih kosong/pendek
                     if (forceFill || alamatInput.value.length < 5) {
                         alamatInput.value = data.display_name;
                         locStatus.innerHTML =
@@ -692,7 +691,7 @@
                     }
                 }
             } catch (e) {
-                console.error("Geocoding error", e);
+                console.error("Geocoding error");
             }
         }
 
@@ -703,16 +702,22 @@
                 return;
             }
             locStatus.innerHTML = '<i class="fa-solid fa-satellite-dish"></i> Mencari sinyal GPS...';
+
             navigator.geolocation.getCurrentPosition(
-                p => setCoordinate(p.coords.latitude, p.coords.longitude, 'GPS Berhasil!', true),
+                p => setCoordinate(p.coords.latitude, p.coords.longitude, 'GPS Berhasil!',
+                    true), // True = Paksa isi alamat
                 e => locStatus.innerHTML =
-                '<span style="color:#ef4444">Gagal akses GPS. Pastikan Location aktif.</span>', {
+                '<span class="text-danger">Gagal akses GPS. Pastikan Location aktif.</span>', {
                     enableHighAccuracy: true
                 }
             );
         });
 
-        metodeSelect.addEventListener('change', toggleMetode);
+        document.getElementById('metodeSelect').addEventListener('change', function() {
+            const isJemput = this.value === 'jemput';
+            document.getElementById('jemputFields').style.display = isJemput ? 'block' : 'none';
+            if (isJemput) setTimeout(() => map.invalidateSize(), 300);
+        });
 
         document.getElementById('formSetoran').addEventListener('submit', function(e) {
             // Merge Date + Time
@@ -720,41 +725,20 @@
             const jam = document.getElementById('ui_slot_waktu').value;
             document.getElementById('final_jadwal_jemput').value = tgl + 'T' + jam;
 
-            // Validasi Maps jika Jemput
-            if (metodeSelect.value === 'jemput' && !latInput.value) {
+            // Validasi Maps
+            if (document.getElementById('metodeSelect').value === 'jemput' && !latInput.value) {
                 e.preventDefault();
-                jemputFields.scrollIntoView({
+                // Scroll ke map agar user sadar
+                document.getElementById('jemputFields').scrollIntoView({
                     behavior: 'smooth'
                 });
                 alert("Mohon pilih titik penjemputan pada peta!");
-            } else {
-                // Clear cart if success logic proceeds
-                localStorage.removeItem('sampah_checkout_items');
             }
         });
 
         window.onload = () => {
             initMap();
-            toggleMetode(); // Set initial state (hide map fields by default)
-
-            // Check LocalStorage for cart items
-            const savedItems = localStorage.getItem('sampah_checkout_items');
-            if (savedItems) {
-                try {
-                    const items = JSON.parse(savedItems);
-                    if (Array.isArray(items) && items.length > 0) {
-                        items.forEach(item => {
-                            addRow(item.id);
-                        });
-                    } else {
-                        addRow(); // Default 1 row if empty
-                    }
-                } catch (e) {
-                    addRow(); // Error parsing, default row
-                }
-            } else {
-                addRow(); // No storage, default row
-            }
+            addRow();
         };
     </script>
 @endpush

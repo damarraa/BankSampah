@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SetoranSampah;
+use App\Notifications\StatusSetoranNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,8 +43,8 @@ class PetugasSetoranController extends Controller
             abort(403);
         }
 
-        if ($setoran->status !== 'pending') {
-            return back()->with('error', 'Setoran sudah diproses.');
+        if (! in_array($setoran->status, ['pending', 'menunggu'])) {
+            return back()->with('error', 'Setoran sudah diproses oleh petugas lain.');
         }
 
         $setoran->update([
@@ -51,7 +52,11 @@ class PetugasSetoranController extends Controller
             'status'     => 'diproses',
         ]);
 
-        return back()->with('success', 'Order berhasil diambil.');
+        if ($setoran->user) {
+            $setoran->user->notify(new StatusSetoranNotification($setoran));
+        }
+
+        return back()->with('success', 'Order berhasil diambil. User telah dinotifikasi.');
     }
 
     // ✅ update status: diproses/selesai/ditolak

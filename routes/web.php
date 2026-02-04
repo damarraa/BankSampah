@@ -1,9 +1,13 @@
 <?php
 
 use App\Http\Controllers\AdminDashboardController;
+use App\Http\Controllers\AdminKaryaController;
+use App\Http\Controllers\AdminPenjualanController;
 use App\Http\Controllers\AdminSetoranController;
+use App\Http\Controllers\AdminStokController;
 use App\Http\Controllers\KategoriSampahController;
 use App\Http\Controllers\MasterKategoriSampahController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PetugasSetoranController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SetoranSampahController;
@@ -51,6 +55,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('/mark-as-read/{id}', [NotificationController::class, 'markAsRead'])->name('notif.read');
+    Route::get('/mark-all-read', [NotificationController::class, 'markAllRead'])->name('notif.read.all');
 });
 
 require __DIR__ . '/auth.php';
@@ -141,6 +148,9 @@ Route::middleware(['auth', 'role:admin'])
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])
             ->name('dashboard');
 
+        Route::post('/keuangan', [AdminDashboardController::class, 'storeKeuangan'])
+            ->name('keuangan.store');
+
         Route::get('/setoran', [AdminSetoranController::class, 'index'])
             ->name('setoran.index');
 
@@ -149,6 +159,13 @@ Route::middleware(['auth', 'role:admin'])
 
         Route::get('/setoran/{id}/petugas-location', [AdminSetoranController::class, 'petugasLocation'])
             ->name('setoran.petugas_location');
+
+        Route::get('/stok', [AdminStokController::class, 'index'])->name('stok.index');
+        Route::post('/stok', [AdminStokController::class, 'store'])->name('stok.store');
+        Route::get('/stok/{id}/edit', [AdminStokController::class, 'edit'])->name('stok.edit');
+
+        Route::resource('penjualan', AdminPenjualanController::class)->only(['index', 'store', 'destroy']);
+        Route::resource('karya', AdminKaryaController::class)->only(['index', 'store', 'destroy']);
 
         Route::get('/peta', [AdminSetoranController::class, 'mapAdmin'])
             ->name('map');

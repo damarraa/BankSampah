@@ -1,321 +1,608 @@
 @extends('layouts.user')
-@section('title', 'Dashboard')
+@section('title', 'Katalog Sampah')
 
 @php
-  use Illuminate\Support\Str;
+    use Illuminate\Support\Str;
 
-  $groups = $kategori->groupBy(function($k){
-    return $k->masterKategori?->nama_kategori ?? 'Lainnya';
-  });
+    // Grouping Kategori
+    $groups = $kategori->groupBy(function ($k) {
+        return $k->masterKategori?->nama_kategori ?? 'Lainnya';
+    });
 
-  $totalCount = $kategori->count();
-  $totalSetoran = (int) $setoranPerTahun->sum('total'); // Total transaksi tahun ini
+    $totalCount = $kategori->count();
+    $totalSetoran = (int) $setoranPerTahun->sum('total');
 
-  // Total Pendapatan (jika ada filter tahun, pakai data filter, jika tidak total semua)
-  $totalPendapatanDisplay = $tahun
-    ? optional($pendapatanPerTahun->firstWhere('tahun', $tahun))->total
-    : $totalPendapatan;
+    // Logic Pendapatan
+    $totalPendapatanDisplay = $tahun
+        ? optional($pendapatanPerTahun->firstWhere('tahun', $tahun))->total
+        : $totalPendapatan;
 @endphp
 
 @push('styles')
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <style>
+        :root {
+            --brand: #10b981;
+            --brand-dark: #059669;
+            --brand-soft: #ecfdf5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --ink: #0f172a;
+            --muted: #64748b;
+            --line: #e2e8f0;
+            --radius: 20px;
+        }
 
-<style>
-  :root{
-    --brand: #10b981;
-    --brand-dark: #059669;
-    --brand-soft: #ecfdf5;
-    --bg: #f8fafc;
-    --card: #ffffff;
-    --ink: #0f172a;
-    --muted: #64748b;
-    --line: #e2e8f0;
-    --radius: 20px;
-  }
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+            background-color: var(--bg);
+            padding-bottom: 100px;
+            /* Ruang untuk floating bar */
+        }
 
-  body, .dashboard-container { font-family: "Plus Jakarta Sans", sans-serif; background-color: var(--bg); }
+        .container-fluid {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
 
-  .container-fluid { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 16px; }
-  @media (min-width: 768px) { .container-fluid { padding: 0 32px; } }
+        @media (min-width: 768px) {
+            .container-fluid {
+                padding: 0 32px;
+            }
+        }
 
-  /* ===== HERO HEADER (CONSISTENT STYLE) ===== */
-  .dashboard-header {
-    background: linear-gradient(135deg, #10b981 0%, #047857 100%);
-    padding: 40px 0 90px; /* Extra padding bawah untuk overlap */
-    color: #fff;
-    border-radius: 0 0 50px 50px;
-    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
-    margin-bottom: -60px;
-    position: relative; overflow: hidden; z-index: 1;
-  }
+        /* ===== HEADER HERO ===== */
+        .dashboard-header {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            padding: 30px 0 80px;
+            color: #fff;
+            border-radius: 0 0 40px 40px;
+            margin-bottom: -50px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.5);
+        }
 
-  /* Dekorasi Header */
-  .dashboard-header::before, .dashboard-header::after {
-    content: ""; position: absolute; border-radius: 50%;
-    background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); pointer-events: none;
-  }
-  .dashboard-header::before { width: 300px; height: 300px; top: -100px; left: -50px; }
-  .dashboard-header::after { width: 200px; height: 200px; bottom: -50px; right: -20px; opacity: 0.6; }
+        .hero-content {
+            text-align: center;
+        }
 
-  .hero-content { position: relative; z-index: 2; text-align: center; }
-  .welcome-title { font-size: 1.8rem; font-weight: 800; margin: 0 0 8px; letter-spacing: -0.5px; }
-  .welcome-subtitle { font-size: 1rem; opacity: 0.95; font-weight: 500; max-width: 600px; margin: 0 auto; line-height: 1.6; }
+        .welcome-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 6px;
+        }
 
-  /* ===== STATS SECTION (OVERLAP) ===== */
-  .stats-grid {
-    display: grid; grid-template-columns: repeat(1, 1fr); gap: 16px;
-    position: relative; z-index: 10; margin-bottom: 30px;
-  }
-  @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        .welcome-subtitle {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            margin: 0;
+        }
 
-  .stat-card {
-    background: #fff; border-radius: var(--radius); padding: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid rgba(255,255,255,0.8);
-    display: flex; align-items: center; gap: 16px; transition: transform 0.2s;
-  }
-  .stat-card:hover { transform: translateY(-3px); }
+        /* ===== STATS GRID ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 12px;
+            position: relative;
+            z-index: 10;
+            margin-bottom: 30px;
+        }
 
-  .stat-icon {
-    width: 56px; height: 56px; border-radius: 16px;
-    display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-    flex-shrink: 0;
-  }
-  .icon-green { background: #ecfdf5; color: #10b981; }
-  .icon-blue { background: #eff6ff; color: #3b82f6; }
-  .icon-amber { background: #fffbeb; color: #f59e0b; }
+        @media (min-width: 640px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
 
-  .stat-info h4 { margin: 0 0 4px; font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-  .stat-info .value { font-size: 1.4rem; font-weight: 900; color: var(--ink); line-height: 1; }
-  .stat-info .sub { font-size: 0.75rem; color: var(--muted); font-weight: 600; margin-top: 4px; }
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-  /* ===== FILTERS & CATALOG ===== */
-  .section-header {
-    display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;
-  }
-  .section-title { font-size: 1.25rem; font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 8px; }
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 1.2rem;
+        }
 
-  /* Scrollable Filter Tabs */
-  .filter-wrapper {
-    display: flex; gap: 8px; overflow-x: auto; padding-bottom: 5px;
-    -webkit-overflow-scrolling: touch; scrollbar-width: none; /* Hide scrollbar Firefox */
-  }
-  .filter-wrapper::-webkit-scrollbar { display: none; /* Hide scrollbar Chrome */ }
+        .icon-green {
+            background: #ecfdf5;
+            color: #10b981;
+        }
 
-  .filter-btn {
-    padding: 8px 16px; background: #fff; border: 1px solid var(--line); border-radius: 50px;
-    font-size: 0.85rem; font-weight: 700; color: var(--muted); white-space: nowrap; cursor: pointer; transition: 0.2s;
-  }
-  .filter-btn:hover { border-color: var(--brand); color: var(--brand-dark); }
-  .filter-btn.active { background: var(--brand); border-color: var(--brand); color: #fff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
-  .filter-count {
-    font-size: 0.7rem; background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 10px; margin-left: 6px;
-  }
-  .filter-btn.active .filter-count { background: rgba(255,255,255,0.25); color: #fff; }
+        .icon-blue {
+            background: #eff6ff;
+            color: #3b82f6;
+        }
 
-  /* ===== PRODUCT GRID ===== */
-  .products-grid {
-    display: grid; grid-template-columns: repeat(1, 1fr); gap: 20px; padding-bottom: 60px;
-  }
-  @media (min-width: 640px) { .products-grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 900px) { .products-grid { grid-template-columns: repeat(3, 1fr); } }
-  @media (min-width: 1200px) { .products-grid { grid-template-columns: repeat(4, 1fr); } }
+        .stat-info h4 {
+            margin: 0;
+            font-size: 0.75rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            font-weight: 700;
+        }
 
-  .product-card {
-    background: #fff; border: 1px solid var(--line); border-radius: 16px; overflow: hidden;
-    transition: 0.2s; display: flex; flex-direction: column; height: 100%;
-  }
-  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); border-color: var(--brand-soft); }
+        .stat-info .value {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--ink);
+        }
 
-  .product-img-wrap {
-    position: relative; width: 100%; aspect-ratio: 4/3; background: #f1f5f9; overflow: hidden;
-  }
-  .product-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-  .product-card:hover .product-img-wrap img { transform: scale(1.05); }
+        /* ===== CATALOG SECTION ===== */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
 
-  .badge-cat {
-    position: absolute; top: 10px; left: 10px;
-    background: rgba(255,255,255,0.95); backdrop-filter: blur(4px);
-    padding: 4px 10px; border-radius: 8px;
-    font-size: 0.7rem; font-weight: 800; color: var(--ink); box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
+        .filter-wrapper {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
 
-  .product-body { padding: 16px; flex: 1; display: flex; flex-direction: column; }
-  .p-title { font-size: 1rem; font-weight: 800; color: var(--ink); margin: 0 0 6px; line-height: 1.3; }
-  .p-desc { font-size: 0.8rem; color: var(--muted); margin-bottom: 12px; line-height: 1.5; flex: 1; }
+        .filter-wrapper::-webkit-scrollbar {
+            display: none;
+        }
 
-  .p-price-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; }
-  .p-label { font-size: 0.7rem; font-weight: 700; color: var(--muted); display: block; margin-bottom: 2px; }
-  .p-value { font-size: 1.1rem; font-weight: 900; color: var(--brand-dark); }
-  .p-unit { font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+        .filter-btn {
+            padding: 8px 16px;
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--muted);
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.2s;
+        }
 
-  .btn-add {
-    margin-top: 14px; width: 100%; padding: 10px; border-radius: 10px; border: none;
-    background: var(--brand-soft); color: var(--brand-dark); font-weight: 800; font-size: 0.85rem;
-    cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none;
-  }
-  .btn-add:hover { background: var(--brand); color: #fff; }
+        .filter-btn.active {
+            background: var(--brand);
+            border-color: var(--brand);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
 
-  /* Empty State */
-  .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff; border-radius: 16px; border: 1px dashed var(--line); }
-  .empty-icon { font-size: 3rem; color: var(--line); margin-bottom: 15px; }
-</style>
+        /* ===== PRODUCT GRID (E-COMMERCE STYLE) ===== */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            /* Mobile 2 kolom */
+        }
+
+        @media (min-width: 768px) {
+            .products-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .products-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .product-card {
+            background: #fff;
+            border: 2px solid transparent;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            user-select: none;
+        }
+
+        .product-card:active {
+            transform: scale(0.98);
+        }
+
+        /* State Terpilih */
+        .product-card.selected {
+            border-color: var(--brand);
+            background-color: #f0fdf4;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Checkmark Overlay */
+        .check-icon {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 5;
+            width: 28px;
+            height: 28px;
+            background: var(--brand);
+            border-radius: 50%;
+            color: #fff;
+            display: grid;
+            place-items: center;
+            font-size: 14px;
+            opacity: 0;
+            transform: scale(0);
+            transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .product-card.selected .check-icon {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .product-img {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #f1f5f9;
+        }
+
+        .product-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .badge-cat {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(4px);
+            color: var(--ink);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.65rem;
+            font-weight: 800;
+        }
+
+        .product-body {
+            padding: 12px;
+            text-align: left;
+        }
+
+        .p-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 2px;
+            line-height: 1.3;
+        }
+
+        .p-price {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--brand-dark);
+        }
+
+        .p-unit {
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        /* Tombol status di bawah card */
+        .card-action {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-align: center;
+            background: #f1f5f9;
+            color: var(--muted);
+            transition: 0.2s;
+        }
+
+        .product-card.selected .card-action {
+            background: var(--brand);
+            color: #fff;
+            content: "Terpilih";
+        }
+
+        /* ===== FLOATING CART BAR ===== */
+        .cart-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: #111827;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transform: translateY(200%);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .cart-bar.active {
+            transform: translateY(0);
+        }
+
+        .cart-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .cart-badge {
+            background: var(--brand);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .cart-text div {
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .cart-text small {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            font-weight: 500;
+        }
+
+        .btn-checkout {
+            background: var(--brand);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-checkout:hover {
+            background: var(--brand-dark);
+            transform: scale(1.05);
+        }
+
+        /* Empty State */
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+    </style>
 @endpush
 
 @section('content')
-<div class="dashboard-container">
+    <div class="dashboard-container">
 
-  <div class="dashboard-header">
-    <div class="container-fluid">
-      <div class="hero-content">
-        <h1 class="welcome-title">👋 Halo, {{ Auth::user()->name ?? 'User' }}!</h1>
-        <p class="welcome-subtitle">
-          Selamat datang di dashboard SampahKu. Kelola sampah, pantau pendapatan, dan jaga lingkungan bersama-sama.
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div class="container-fluid">
-
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon icon-green"><i class="fa-solid fa-wallet"></i></div>
-        <div class="stat-info">
-          <h4>Pendapatan Anda</h4>
-          <div class="value">Rp {{ number_format($totalPendapatanDisplay, 0, ',', '.') }}</div>
-          <div class="sub">
-            @if($tahun) Tahun {{ $tahun }} @else Semua Waktu @endif
-          </div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon icon-blue"><i class="fa-solid fa-receipt"></i></div>
-        <div class="stat-info">
-          <h4>Total Transaksi</h4>
-          <div class="value">{{ number_format($totalSetoran) }}</div>
-          <div class="sub">Kali setoran berhasil</div>
-        </div>
-      </div>
-
-      <div class="stat-card" style="background: #f8fafc; border: 2px dashed #cbd5e1; justify-content: center;">
-        <form action="{{ route('user.dashboard') }}" method="GET" style="width: 100%;">
-          <div style="display:flex; gap:10px; align-items:center; justify-content: space-between;">
-            <div style="font-weight:700; color:var(--muted); font-size:0.9rem;">
-              <i class="fa-solid fa-calendar-days"></i> Filter Tahun
+        {{-- HEADER --}}
+        <div class="dashboard-header">
+            <div class="container-fluid">
+                <div class="hero-content">
+                    <h1 class="welcome-title">Katalog Sampah</h1>
+                    <p class="welcome-subtitle">Pilih jenis sampah yang ingin disetor, lalu klik "Lanjut Setor".</p>
+                </div>
             </div>
-            <select name="tahun" onchange="this.form.submit()"
-              style="width:auto; padding: 8px 12px; border-radius: 8px; font-size:0.85rem; border-color:#cbd5e1;">
-              <option value="">Semua</option>
-              @foreach($listTahun as $t)
-                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}</option>
-              @endforeach
-            </select>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
 
-    <div class="section-header">
-      <div class="section-title">
-        <i class="fa-solid fa-recycle" style="color:var(--brand)"></i> Katalog Sampah
-      </div>
+        <div class="container-fluid">
 
-      <div class="filter-wrapper" id="filterTabs">
-        <button class="filter-btn active" data-filter="__all__">
-          Semua <span class="filter-count">{{ $totalCount }}</span>
-        </button>
-        @foreach($groups as $gName => $list)
-          @php $gKey = Str::slug($gName); @endphp
-          <button class="filter-btn" data-filter="{{ $gKey }}">
-            {{ $gName }} <span class="filter-count">{{ $list->count() }}</span>
-          </button>
-        @endforeach
-      </div>
-    </div>
+            {{-- MINI STATS (Opsional, untuk konteks) --}}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-green"><i class="fa-solid fa-wallet"></i></div>
+                    <div class="stat-info">
+                        <h4>Saldo</h4>
+                        <div class="value">Rp {{ number_format($totalPendapatanDisplay, 0, ',', '.') }}</div>
+                    </div>
+                </div>
 
-    <div class="products-grid" id="productsGrid">
-      @forelse($kategori as $k)
-        @php
-          $gName = $k->masterKategori?->nama_kategori ?? 'Lainnya';
-          $gKey  = Str::slug($gName);
-        @endphp
-
-        <div class="product-card" data-group="{{ $gKey }}">
-          <div class="product-img-wrap">
-            <span class="badge-cat">{{ $gName }}</span>
-            @if(!empty($k->gambar_sampah))
-              <img src="{{ asset('storage/'.$k->gambar_sampah) }}" alt="{{ $k->nama_sampah }}">
-            @else
-              <div style="height:100%; display:flex; align-items:center; justify-content:center; color:var(--muted); font-weight:700;">
-                <i class="fa-regular fa-image" style="font-size:2rem; margin-right:8px;"></i> No Image
-              </div>
-            @endif
-          </div>
-
-          <div class="product-body">
-            <h3 class="p-title">{{ $k->nama_sampah }}</h3>
-            <p class="p-desc">
-              {{ $k->deskripsi ? Str::limit($k->deskripsi, 60) : 'Tidak ada deskripsi tersedia.' }}
-            </p>
-
-            <div class="p-price-row">
-              <div>
-                <span class="p-label">Estimasi Harga</span>
-                <span class="p-value">
-                  {{ $k->harga_satuan ? 'Rp ' . number_format($k->harga_satuan, 0, ',', '.') : 'Gratis' }}
-                </span>
-                <span class="p-unit">/ {{ $k->jenis_satuan ?? 'kg' }}</span>
-              </div>
+                <div class="stat-card" style="padding: 10px; background: #f8fafc; border: 1px dashed #cbd5e1;">
+                    <form action="{{ route('user.dashboard') }}" method="GET"
+                        style="width: 100%; display:flex; align-items:center; justify-content:space-between; padding:0 8px;">
+                        <div style="font-weight:700; color:var(--muted); font-size:0.8rem;">
+                            <i class="fa-solid fa-filter"></i> Periode
+                        </div>
+                        <select name="tahun" onchange="this.form.submit()"
+                            style="border:none; background:transparent; font-weight:700; color:var(--ink); outline:none; text-align:right; cursor:pointer;">
+                            <option value="">Semua</option>
+                            @foreach ($listTahun as $t)
+                                <option value="{{ $t }}" {{ $tahun == $t ? 'selected' : '' }}>{{ $t }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
             </div>
 
-            <a href="{{ route('user.setoran.create', ['kategori_sampah_id' => $k->id]) }}" class="btn-add">
-              <i class="fa-solid fa-plus"></i> Tambah ke Setoran
-            </a>
-          </div>
+            {{-- FILTER TABS --}}
+            <div class="section-header">
+                <div class="filter-wrapper" id="filterTabs">
+                    <button class="filter-btn active" data-filter="__all__">Semua</button>
+                    @foreach ($groups as $gName => $list)
+                        <button class="filter-btn" data-filter="{{ Str::slug($gName) }}">{{ $gName }}</button>
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- PRODUCTS GRID (E-COMMERCE FLOW) --}}
+            <div class="products-grid" id="productsGrid">
+                @forelse($kategori as $k)
+                    @php
+                        $gKey = Str::slug($k->masterKategori?->nama_kategori ?? 'Lainnya');
+                        // Data Object untuk JS
+                        $itemData = [
+                            'id' => $k->id,
+                            'nama' => $k->nama_sampah,
+                            'harga' => $k->harga_satuan,
+                            'satuan' => $k->jenis_satuan,
+                        ];
+                    @endphp
+
+                    <div class="product-card" data-group="{{ $gKey }}"
+                        onclick='toggleSelection(this, @json($itemData))'>
+
+                        {{-- Checkmark Animation --}}
+                        <div class="check-icon"><i class="fa-solid fa-check"></i></div>
+
+                        <div class="product-img">
+                            <span class="badge-cat">{{ $k->masterKategori?->nama_kategori ?? 'Umum' }}</span>
+                            @if ($k->gambar_sampah)
+                                <img src="{{ asset('storage/' . $k->gambar_sampah) }}" alt="{{ $k->nama_sampah }}"
+                                    loading="lazy">
+                            @else
+                                <div style="width:100%; height:100%; display:grid; place-items:center; color:#cbd5e1;">
+                                    <i class="fa-regular fa-image" style="font-size:2rem;"></i>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="product-body">
+                            <div class="p-title">{{ $k->nama_sampah }}</div>
+                            <div>
+                                <span
+                                    class="p-price">{{ $k->harga_satuan ? 'Rp ' . number_format($k->harga_satuan, 0, ',', '.') : 'Gratis' }}</span>
+                                <span class="p-unit">/ {{ $k->jenis_satuan ?? 'unit' }}</span>
+                            </div>
+
+                            {{-- Dynamic Button Text handled by JS/CSS --}}
+                            <div class="card-action">
+                                <span class="txt-add"><i class="fa-solid fa-plus"></i> Tambah</span>
+                                <span class="txt-added" style="display:none">Terpilih</span>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="empty-state">
+                        <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
+                        <h3>Belum ada data</h3>
+                        <p>Admin belum menambahkan katalog sampah.</p>
+                    </div>
+                @endforelse
+            </div>
+
         </div>
-      @empty
-        <div class="empty-state">
-          <div class="empty-icon"><i class="fa-solid fa-box-open"></i></div>
-          <h3 style="font-weight:800; color:var(--ink); margin-bottom:8px;">Belum ada data sampah</h3>
-          <p style="color:var(--muted);">Admin belum menambahkan kategori sampah saat ini.</p>
-        </div>
-      @endforelse
     </div>
 
-  </div>
-</div>
+    {{-- FLOATING CART BAR --}}
+    <div class="cart-bar" id="cartBar">
+        <div class="cart-info">
+            <div class="cart-badge" id="cartCount">0</div>
+            <div class="cart-text">
+                <div>Item Terpilih</div>
+                <small>Siap untuk disetorkan</small>
+            </div>
+        </div>
+        <a href="javascript:void(0)" onclick="processCheckout()" class="btn-checkout">
+            Lanjut Setor <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
 @endsection
 
 @push('scripts')
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const tabs = document.querySelectorAll('.filter-btn');
-    const cards = document.querySelectorAll('.product-card');
+    <script>
+        // Store selected items map (ID -> Object)
+        let selectedItems = new Map();
 
-    tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        // Active State
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Reset selection on load (Fresh start strategy)
+            localStorage.removeItem('sampah_checkout_items');
 
-        const filterVal = tab.dataset.filter;
+            // 2. Filter Logic
+            const tabs = document.querySelectorAll('.filter-btn');
+            const cards = document.querySelectorAll('.product-card');
 
-        // Filter Logic
-        let count = 0;
-        cards.forEach(card => {
-          if(filterVal === '__all__' || card.dataset.group === filterVal){
-            card.style.display = 'flex';
-            count++;
-          } else {
-            card.style.display = 'none';
-          }
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+
+                    const filterVal = tab.dataset.filter;
+                    cards.forEach(card => {
+                        card.style.display = (filterVal === '__all__' || card.dataset
+                            .group === filterVal) ? 'flex' : 'none';
+                    });
+                });
+            });
         });
-      });
-    });
-  });
-</script>
+
+        // Toggle Selection Logic
+        function toggleSelection(card, itemData) {
+            // Toggle class UI
+            const isSelected = card.classList.toggle('selected');
+            const txtAdd = card.querySelector('.txt-add');
+            const txtAdded = card.querySelector('.txt-added');
+
+            if (isSelected) {
+                // Add to map
+                selectedItems.set(itemData.id, itemData);
+                txtAdd.style.display = 'none';
+                txtAdded.style.display = 'inline';
+            } else {
+                // Remove from map
+                selectedItems.delete(itemData.id);
+                txtAdd.style.display = 'inline';
+                txtAdded.style.display = 'none';
+            }
+
+            updateFloatingBar();
+        }
+
+        function updateFloatingBar() {
+            const bar = document.getElementById('cartBar');
+            const countEl = document.getElementById('cartCount');
+            const total = selectedItems.size;
+
+            countEl.innerText = total;
+
+            if (total > 0) {
+                bar.classList.add('active');
+            } else {
+                bar.classList.remove('active');
+            }
+        }
+
+        function processCheckout() {
+            if (selectedItems.size === 0) return;
+
+            const itemsArray = Array.from(selectedItems.values());
+            localStorage.setItem('sampah_checkout_items', JSON.stringify(itemsArray));
+            window.location.href = "{{ route('user.setoran.create') }}";
+        }
+    </script>
 @endpush
